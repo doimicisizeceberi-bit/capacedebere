@@ -59,7 +59,9 @@ export async function POST(req: Request) {
 	  cc && Array.isArray(cc) ? cc[0]?.country_name_abb ?? null : cc?.country_name_abb ?? null;
     if (!abb) return NextResponse.json({ error: "Missing country ABB for cap" }, { status: 400 });
 
-    const oldPath: string | null = cap.photo_caps?.photo_path ?? null;
+	const pc: any = cap.photo_caps;
+	const oldPath: string | null =
+	  pc && Array.isArray(pc) ? pc[0]?.photo_path ?? null : pc?.photo_path ?? null;
 
     // New filename rule: beer_name-cap_no-country_abb.ext
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
