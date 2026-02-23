@@ -54,7 +54,9 @@ export async function POST(req: Request) {
     if (capErr) return NextResponse.json({ error: capErr.message }, { status: 400 });
     if (!cap) return NextResponse.json({ error: "Cap not found" }, { status: 404 });
 
-    const abb = cap.caps_country?.country_name_abb;
+	const cc: any = cap.caps_country;
+	const abb: string | null =
+	  cc && Array.isArray(cc) ? cc[0]?.country_name_abb ?? null : cc?.country_name_abb ?? null;
     if (!abb) return NextResponse.json({ error: "Missing country ABB for cap" }, { status: 400 });
 
     const oldPath: string | null = cap.photo_caps?.photo_path ?? null;
