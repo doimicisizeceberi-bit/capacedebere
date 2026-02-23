@@ -54,9 +54,7 @@ export default function LoginClient() {
           autoFocus
         />
 
-        {error && (
-          <div style={{ marginTop: 10, color: "#b00020" }}>{error}</div>
-        )}
+        {error && <div style={{ marginTop: 10, color: "#b00020" }}>{error}</div>}
 
         <div style={{ marginTop: 12 }}>
           <button className="button" type="submit" disabled={loading}>
