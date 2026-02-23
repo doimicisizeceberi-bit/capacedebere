@@ -437,22 +437,24 @@ export default function ManageBarcodesPage() {
 						<td>{scanResult.cap.caps_country?.country_name_full ?? "-"}</td>
 						<td>{scanResult.cap.sheet ?? "-"}</td>
 						<td>
-						  {scanResult.cap.photo_caps?.photo_path ? (
-							<img
-							  className="thumb"
-							  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${scanResult.cap.photo_caps.photo_path}`}
-							  alt="cap"
-							  style={{ cursor: "zoom-in" }}
-							  onClick={(e) => {
-								e.stopPropagation();
-								setPreviewUrl(
-								  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${scanResult.cap.photo_caps.photo_path}`
-								);
-							  }}
-							/>
-						  ) : (
-							<div className="thumb-placeholder">No photo</div>
-						  )}
+							{scanResult.cap?.photo_caps?.photo_path && (
+							  <img
+								className="thumb"
+								src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${scanResult.cap.photo_caps.photo_path}`}
+								alt="cap"
+								style={{ cursor: "zoom-in" }}
+								onClick={(e) => {
+								  e.stopPropagation();
+
+								  const photoPath = scanResult.cap?.photo_caps?.photo_path;
+								  if (!photoPath) return;
+
+								  setPreviewUrl(
+									`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${photoPath}`
+								  );
+								}}
+							  />
+							)}
 						</td>
 
 					  </tr>
