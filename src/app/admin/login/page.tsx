@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const sp = useSearchParams();
+	const sp = useSearchParams();
 
-  const nextPath = useMemo(() => sp.get("next") || "/admin", [sp]);
+	const nextPath = useMemo(() => sp?.get("next") || "/admin", [sp]);
 
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
