@@ -650,22 +650,28 @@ export default function TagSearchPage() {
                         <td>{cap.caps_country?.country_name_full ?? "-"}</td>
                         <td>{cap.sheet ?? "-"}</td>
                         <td>
-                          {cap.photo_caps?.photo_path ? (
-                            <img
-                              className="thumb"
-                              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${cap.photo_caps.photo_path}`}
-                              alt="cap"
-                              style={{ cursor: "zoom-in" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewUrl(
-                                  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${cap.photo_caps.photo_path}`
-                                );
-                              }}
-                            />
-                          ) : (
-                            <div className="thumb-placeholder">No photo</div>
-                          )}
+							{(() => {
+							  const photoPath = cap.photo_caps?.photo_path;
+
+							  if (!photoPath) {
+								return <div className="thumb-placeholder">No photo</div>;
+							  }
+
+							  const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/beer-caps/${photoPath}`;
+
+							  return (
+								<img
+								  className="thumb"
+								  src={imageUrl}
+								  alt="cap"
+								  style={{ cursor: "zoom-in" }}
+								  onClick={(e) => {
+									e.stopPropagation();
+									setPreviewUrl(imageUrl);
+								  }}
+								/>
+							  );
+							})()}
                         </td>
                       </tr>
 
