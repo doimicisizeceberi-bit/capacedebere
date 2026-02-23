@@ -182,9 +182,13 @@ export default function EditCapPage() {
       meta: countryIdToAbb.get(s.source_country) ?? String(s.source_country),
     }));
 
-    if (sourceOpt && sourceOpt.id > 0 && !opts.some((o) => o.id === sourceOpt.id)) {
-      opts.unshift(sourceOpt);
-    }
+	if (sourceOpt && sourceOpt.id > 0 && !opts.some((o) => o.id === sourceOpt.id)) {
+	  opts.unshift({
+		id: sourceOpt.id,
+		label: sourceOpt.label,
+		meta: sourceOpt.meta ?? "",
+	  });
+	}
 
     return opts;
   }, [sources, countryIdToAbb, sourceOpt]);
