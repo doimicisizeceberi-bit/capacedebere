@@ -37,7 +37,9 @@ export async function POST(req: Request) {
     if (capErr) return NextResponse.json({ error: capErr.message }, { status: 400 });
     if (!cap) return NextResponse.json({ error: "Cap not found" }, { status: 404 });
 
-    const oldPath: string | null = cap.photo_caps?.photo_path ?? null;
+	const pc: any = cap.photo_caps;
+	const oldPath: string | null =
+	  pc && Array.isArray(pc) ? pc[0]?.photo_path ?? null : pc?.photo_path ?? null;
 
     // If there's no photo row, treat as success (idempotent)
     if (!oldPath) {
