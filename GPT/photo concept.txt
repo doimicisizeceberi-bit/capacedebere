@@ -1,0 +1,244 @@
+Here’s a concept-first layout and feature set, no code yet.
+
+🧭 Core Purpose
+
+Make it fast to find, verify, fix, and improve photos across your entire collection.
+
+This page shouldn’t just answer “is there a photo?”
+It should answer:
+
+Is the photo correct
+
+Is it good quality
+
+Is it consistent with the rest of the archive
+
+🏗️ Page Structure Concept
+1️⃣ Top Summary Bar (Mission Control)
+
+At the top, show quick stats:
+
+📸 Total caps: 1,284
+
+❌ Missing photos: 37
+
+⚠️ Low-quality photos: 112
+
+🔁 Duplicates detected: 5
+
+🕒 Last upload: 2 days ago
+
+This gives you instant motivation and context.
+
+2️⃣ Filter Panel (Left or Top)
+
+Instead of scrolling endlessly, you “slice” the collection.
+
+Essential Filters
+
+Status
+
+Missing photo
+
+Has photo
+
+Flagged for review
+
+Country
+
+Beer name (search)
+
+Date added
+
+Recently edited
+
+Smart Filters (Power Tools)
+
+“Show only caps added in last 30 days without photos”
+
+“Show photos smaller than X KB” (proxy for low quality)
+
+“Show all caps with same beer name”
+
+3️⃣ Main Grid (Visual First, Not Table First)
+
+This page should be image-driven, not text-driven.
+
+Layout Idea
+
+A photo wall instead of rows:
+
+[Thumb]  [Thumb]  [Missing]
+[Thumb]  [Flagged] [Thumb]
+
+
+Each tile shows:
+
+Beer name
+
+Cap no
+
+Country
+
+Status badge (Missing / OK / Flagged)
+
+Missing Photos Look Different
+
+Big empty tile:
+
+📷 Missing
+Tucher — #3 — Germany
+[Upload]
+
+So your eyes go straight to the problem.
+
+4️⃣ Click = Audit Panel (Right Side Drawer)
+
+When you click a cap, a side panel slides in instead of a new page.
+
+Shows:
+
+Full-size photo
+
+Filename
+
+Cap metadata
+
+Tags
+
+Barcodes count
+
+History:
+
+When photo added
+
+Last replaced
+
+Who/what did it (later: user role)
+
+Action Buttons:
+
+🔄 Replace photo
+
+🏷 Add tag (“bad crop”, “low res”, “wrong cap”)
+
+❌ Mark as incorrect
+
+✅ Mark as verified
+
+This makes it feel like a curation tool, not a CRUD form.
+
+5️⃣ Quality Tools (The Fun Part)
+Auto Flags
+
+You can define “bad photo” rules later:
+
+Resolution below 500x500
+
+File size under 50KB
+
+Not square
+
+Too dark / too bright (advanced later)
+
+Then:
+
+⚠️ 23 photos flagged for review
+
+6️⃣ Bulk Actions (Huge Time Saver)
+
+Sometimes you’ll want to clean up in batches:
+
+Select 10 caps
+
+Click:
+
+“Mark verified”
+
+“Tag as low quality”
+
+“Export list”
+
+This turns hours of work into minutes.
+
+7️⃣ Comparison Mode (Collector Power Feature)
+
+For caps with same beer name:
+
+“Compare all Tucher caps”
+
+Shows them side-by-side:
+
+[Cap #1] [Cap #2] [Cap #3]
+
+
+Perfect for spotting wrong uploads or duplicates.
+
+🎯 Status System (Simple but Powerful)
+
+Each cap gets a photo status (not just “has photo”)
+
+Suggested statuses:
+
+🟥 Missing
+
+🟨 Needs Review
+
+🟩 Verified
+
+🟦 Reference Photo (placeholder, temporary)
+
+This can live as:
+
+A tag
+
+Or a future photo_status column
+
+🧠 Smart Workflow
+
+Your “Add Cap” → “Upload Photo” → “Photo Audit” flow becomes:
+
+Add cap
+
+Upload photo
+
+Audit page auto shows:
+
+“1 new photo needs verification”
+
+That’s museum-grade design thinking.
+
+🧩 Future-Proof Hooks (Even if you don’t build now)
+
+Design the page so later you can add:
+
+User roles (“verified by admin”)
+
+Photo history (versioning)
+
+AI detection (blur, brightness, duplicates)
+
+Public gallery view
+
+⭐ My Recommendation for v1
+
+Don’t try to build everything at once.
+
+Phase 1 Concept
+
+Visual grid
+
+Filter: Missing / Has photo
+
+Click → side panel
+
+Replace photo button
+
+That alone will feel professional and powerful.
+
+🔥 Question for you (this affects the whole design)
+
+Do you see this archive as:
+A) Personal collection tool
+B) Museum-style digital archive
+C) Public browsing site someday
