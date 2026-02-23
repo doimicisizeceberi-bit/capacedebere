@@ -25,8 +25,8 @@ function slugBeerNameKeepCase(name: string) {
 
 
 export default function UploadPhotoPage() {
-  const sp = useSearchParams();
-  const initialId = sp.get("id");
+	const sp = useSearchParams();
+	const initialId = sp?.get("id");
 
   const [caps, setCaps] = useState<CapPick[]>([]);
   const [capId, setCapId] = useState<number | "">(initialId ? Number(initialId) : "");
