@@ -249,7 +249,7 @@ export default function ManageBarcodesPage() {
     canvas.width = Math.round(barcodeWmm * pxPerMm);
     canvas.height = Math.round(barcodeHmm * pxPerMm);
 
-    await bwipjs.toCanvas(canvas, {
+	await (bwipjs as any).toCanvas(canvas, {
       bcid: "code128",
       text: normalized,
       includetext: false,
