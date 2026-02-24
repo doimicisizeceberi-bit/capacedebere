@@ -13,32 +13,39 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+	const onSubmit = async (e: React.FormEvent) => {
+	  e.preventDefault();
+	  setLoading(true);
+	  setError(null);
 
-    try {
-      const res = await fetch("/api/admin/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+	  const controller = new AbortController();
+	  const timer = setTimeout(() => controller.abort(), 15000); // 15s
 
-      const json = await res.json().catch(() => ({}));
+	  try {
+		const res = await fetch("/api/admin/auth/login", {
+		  method: "POST",
+		  headers: { "Content-Type": "application/json" },
+		  body: JSON.stringify({ password }),
+		  cache: "no-store",
+		  signal: controller.signal,
+		});
 
-      if (!res.ok) {
-        setError(json?.error || "Login failed");
-        setLoading(false);
-        return;
-      }
+		let json: any = {};
+		try { json = await res.json(); } catch {}
 
-      router.replace(nextPath);
-    } catch {
-      setError("Login failed");
-      setLoading(false);
-    }
-  };
+		if (!res.ok) {
+		  setError(json?.error || `Login failed (${res.status})`);
+		  return;
+		}
+
+		window.location.assign(nextPath);
+	  } catch (err: any) {
+		setError(err?.name === "AbortError" ? "Login timed out. Please try again." : "Login failed");
+	  } finally {
+		clearTimeout(timer);
+		setLoading(false);
+	  }
+	};
 
   return (
     <div className="card" style={{ maxWidth: 420, margin: "20px auto" }}>
