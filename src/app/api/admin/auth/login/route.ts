@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { verifyAdminPasswordNode } from "@/lib/adminPasswordNode";
+import { verifyAdminPasswordEdge } from "@/lib/adminPasswordEdge";
 import { ADMIN_COOKIE, createAdminSessionTokenEdge } from "@/lib/adminSessionEdge";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 function getCookieOptions(isProd: boolean) {
   return {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const password = String(body?.password ?? "");
 
-    const ok = await verifyAdminPasswordNode(password);
+    const ok = await verifyAdminPasswordEdge(password);
     if (!ok) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 });
     }
@@ -29,7 +29,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing ADMIN_AUTH_SECRET" }, { status: 500 });
     }
 
-    // token generation uses WebCrypto-compatible helper (works fine in Node too)
     const token = await createAdminSessionTokenEdge(secret);
 
     const res = NextResponse.json({ ok: true });
