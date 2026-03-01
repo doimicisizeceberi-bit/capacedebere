@@ -1,9 +1,12 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import React from "react";
-import { useSearchParams } from "next/navigation";
+
 
 type CapRow = {
   id: number;
