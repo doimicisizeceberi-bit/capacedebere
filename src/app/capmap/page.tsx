@@ -545,44 +545,42 @@ export default function CapMapPage() {
 					  </defs>
 					</svg>
 					
-					<SVGMap
-					  data={totalsData.map((r) => ({ country: r.iso2, value: r.value }))}
-					  size="responsive"
-					  backgroundColor="transparent"
-					  styleFunction={styleFunction as any}
-					  tooltipBgColor="transparent"
-					  tooltipTextColor="transparent"
-					  tooltipFontSize="0px"
-							onClickFunction={(context) => {
-							  const code = String(context?.countryCode ?? "").toUpperCase();
-							  if (!/^[A-Z]{2}$/.test(code)) return;
+							<SVGMap
+							  data={totalsData.map((r) => ({ country: r.iso2, value: r.value }))}
+							  size="responsive"
+							  backgroundColor="transparent"
+							  styleFunction={styleFunction as any}
+							  tooltipBgColor="transparent"
+							  tooltipTextColor="transparent"
+							  onClickFunction={(context) => {
+								const code = String(context?.countryCode ?? "").toUpperCase();
+								if (!/^[A-Z]{2}$/.test(code)) return;
 
-							  setSelectedIso2(code);
-							  loadBreakdown(code);
+								setSelectedIso2(code);
+								loadBreakdown(code);
 
-							  // 🔥 Auto zoom to clicked country
-							  const path = context.event?.target as SVGGraphicsElement;
-							  if (!path?.getBBox) return;
+								const path = context.event?.target as SVGGraphicsElement;
+								if (!path?.getBBox) return;
 
-							  const bbox = path.getBBox();
-							  const centerX = bbox.x + bbox.width / 2;
-							  const centerY = bbox.y + bbox.height / 2;
+								const bbox = path.getBBox();
+								const centerX = bbox.x + bbox.width / 2;
+								const centerY = bbox.y + bbox.height / 2;
 
-							  const box = mapBoxRef.current;
-							  if (!box) return;
+								const box = mapBoxRef.current;
+								if (!box) return;
 
-							  const newZoom = 5;
+								const newZoom = 5;
 
-							  const boxCenterX = box.clientWidth / 2;
-							  const boxCenterY = box.clientHeight / 2;
+								const boxCenterX = box.clientWidth / 2;
+								const boxCenterY = box.clientHeight / 2;
 
-							  const newPanX = boxCenterX - centerX * newZoom;
-							  const newPanY = boxCenterY - centerY * newZoom;
+								const newPanX = boxCenterX - centerX * newZoom;
+								const newPanY = boxCenterY - centerY * newZoom;
 
-							  setZoom(newZoom);
-							  setPan({ x: newPanX, y: newPanY });
-							}}
-					/>
+								setZoom(newZoom);
+								setPan({ x: newPanX, y: newPanY });
+							  }}
+							/>
 				  </div>
 				</div>
 				</div>
