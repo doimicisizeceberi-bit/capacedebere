@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import React from "react";
@@ -30,7 +29,7 @@ type CapRow = {
 };
 
 export default function CapsPage() {
-  const searchParams = useSearchParams();
+
 
   const toggleSort = (col: "beer" | "country" | "sheet") => {
     setPage(1);
@@ -145,17 +144,6 @@ export default function CapsPage() {
 				</span>
 			  );
 			};
-
-
-
-  // NEW: read map_iso2 from URL
-  useEffect(() => {
-    const raw = (searchParams?.get("map_iso2") || "").trim().toUpperCase();
-    const iso2 = /^[A-Z]{2}$/.test(raw) ? raw : "";
-    setMapIso2(iso2);
-    // when URL map filter changes, go to first page
-    setPage(1);
-  }, [searchParams]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
