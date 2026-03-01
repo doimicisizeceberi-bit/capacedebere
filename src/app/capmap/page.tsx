@@ -406,23 +406,23 @@ export default function CapMapPage() {
 									+
 								  </button>
 
-								  {/* Taller vertical slider */}
-								  <input
-									type="range"
-									min={1}
-									max={16}
-									step={0.1}
-									value={zoom}
-									onChange={(e) => setZoom(Number(e.target.value))}
-									style={{
-									  writingMode: "bt-lr",
-									  WebkitAppearance: "slider-vertical",
-									  height: 280,          // ← longer
-									  width: 14,            // still narrow
-									  opacity: 0.75,
-									  cursor: "pointer",
-									}}
-								  />
+										{/* Taller vertical slider */}
+										<input
+										  type="range"
+										  min={1}
+										  max={16}
+										  step={0.1}
+										  value={zoom}
+										  onChange={(e) => setZoom(Number(e.target.value))}
+										  style={{
+											writingMode: "vertical-lr",
+											WebkitAppearance: "slider-vertical",
+											height: 280,
+											width: 14,
+											opacity: 0.75,
+											cursor: "pointer",
+										  }}
+										/>
 
 								  {/* Minus */}
 								  <button
