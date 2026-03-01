@@ -415,7 +415,7 @@ export default function SourcesPage() {
 
   return (
     <main className="page">
-      <h1>Beer-cap Sources</h1>
+      <h1 className="h1-display">👤 Beer-cap Sources</h1>
 
       {/* Create section */}
       <div className="actions" style={{ justifyContent: "space-between", marginTop: 10 }}>

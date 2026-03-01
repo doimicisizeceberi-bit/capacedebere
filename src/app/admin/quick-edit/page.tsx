@@ -339,7 +339,7 @@ export default function QuickEditPage() {
 
   return (
     <div>
-      <h1>Quick edit/remove beer caps</h1>
+      <h1 className="h1-display">⚡ Quick edit/remove beer caps</h1>
       <p className="muted">
         This module only allows editing/deleting caps that have <b>no photo</b> and{" "}
         <b>no barcode</b>. For caps with photos or barcodes, use the dedicated modules.

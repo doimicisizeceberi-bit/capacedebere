@@ -127,7 +127,7 @@ export default function UploadPhotoClient() {
 
   return (
     <>
-      <h1>Upload photo</h1>
+      <h1 className="h1-display">📸 Upload Photo</h1>
 
       <p style={{ color: "var(--muted)", marginTop: 6 }}>
         Select a cap → choose image → upload. This updates Storage + photo_caps.

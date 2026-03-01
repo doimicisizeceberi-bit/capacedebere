@@ -255,7 +255,7 @@ export default function ManageTagsPage() {
 
   return (
     <main className="page">
-      <h1>Manage tags</h1>
+      <h1 className="h1-display">🧩 Manage tags</h1>
 
       {/* Create */}
       <div className="admin-card" style={{ marginBottom: "1rem" }}>
@@ -264,7 +264,7 @@ export default function ManageTagsPage() {
         <div className="admin-grid-3">
           <div>
             <label className="admin-label">Tag</label>
-            <input className="admin-input" value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. tiger" />
+            <input className="th-input" value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. tiger" />
             <div className="muted" style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
               Normalized: <b>{newTag ? normalizeSlug(newTag) : "—"}</b>
             </div>
@@ -277,7 +277,7 @@ export default function ManageTagsPage() {
 			  value={newType}
 			  onChange={setNewType}
 			  placeholder="e.g. animals"
-			  inputClassName="admin-input"
+			  inputClassName="th-input"
 			  minChars={1}
 			  allowCreate
 			/>

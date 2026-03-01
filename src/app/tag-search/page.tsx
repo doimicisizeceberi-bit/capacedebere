@@ -363,7 +363,7 @@ export default function TagSearchPage() {
 
   return (
     <main className="page">
-      <h1>Tag Search</h1>
+            <h1 className="h1-display">🧾 Tag Search</h1>
 
       {/* Top builder: two typeaheads + mode */}
       <div className="filters-bar" style={{ alignItems: "flex-start" }}>

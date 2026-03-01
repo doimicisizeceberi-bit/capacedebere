@@ -132,7 +132,7 @@ export default function SettingsPage() {
 
   return (
     <main className="page">
-      <h1>Settings</h1>
+      <h1 className="h1-display">⚙️ Settings</h1>
 
       <div className="pager" style={{ marginBottom: "1rem" }}>
         <div className="filters-bar">

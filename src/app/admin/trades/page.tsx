@@ -277,7 +277,7 @@ export default function TradesPage() {
 
   return (
     <>
-      <h1>Trades</h1>
+      <h1 className="h1-display">🔄 Trades</h1>
 
       {/* Create trade */}
       <div className="form" style={{ marginTop: 12 }}>

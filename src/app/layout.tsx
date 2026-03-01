@@ -1,6 +1,7 @@
 import "./globals.css";
 import NavBar from "./NavBar";
 import { Roboto } from "next/font/google";
+import "leaflet/dist/leaflet.css";
 
 const font = Roboto({
   subsets: ["latin"],

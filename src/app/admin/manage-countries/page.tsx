@@ -241,7 +241,7 @@ export default function ManageCountriesPage() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 8 }}>Manage countries</h1>
+      <h1 className="h1-display">🌍 Manage countries</h1>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button

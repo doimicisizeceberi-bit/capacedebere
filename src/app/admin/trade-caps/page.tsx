@@ -283,7 +283,7 @@ export default function TradeCapsPage() {
 
   return (
     <main className="page">
-      <h1>Generate Trade Offer</h1>
+      <h1 className="h1-display">🖨️ Generate Trade Offer</h1>
 
       <div className="pager">
         <div className="filters-bar">

@@ -29,6 +29,13 @@ export default function NavBar() {
         >
           Tag Search
         </Link>
+		
+		<Link
+          href="/capmap"
+          className={pathname === "/capmap" ? "active" : ""}
+        >
+          CapMap
+        </Link>
 
         <Link
           href="/admin"

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main style={{ padding: "2rem" }}>
-      <h1>Beer Cap Collection</h1>
+      <h1 className="h1-display">🍺 Beer Cap Collection</h1>
 
       <p>
         Personal database of my beer cap collection.  
@@ -12,12 +12,7 @@ export default function Home() {
 
       <nav style={{ marginTop: "1.5rem" }}>
         <ul style={{ listStyle: "none", padding: 0 }}>
-          <li>
-            <Link href="/caps">📋 View Beer Caps</Link>
-          </li>
-          <li>
-            <Link href="/admin">⚙️ Admin Area</Link>
-          </li>
+          
         </ul>
       </nav>
     </main>

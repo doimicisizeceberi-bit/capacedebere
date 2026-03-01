@@ -340,7 +340,7 @@ export default function ManageBarcodesPage() {
 
   return (
     <>
-      <h1>Manage barcodes</h1>
+      <h1 className="h1-display">🔢 Manage barcodes</h1>
 	  
 	  	<div
 		  style={{

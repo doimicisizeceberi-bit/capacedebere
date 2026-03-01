@@ -159,7 +159,7 @@ export default function DeleteCapPage() {
 
   return (
     <div>
-      <h1>Delete beer cap</h1>
+      <h1 className="h1-display">🗑️ Delete beer cap</h1>
       <p className="muted">
         This module deletes caps that have <b>no photo</b> and <b>barcodes</b>.
         It releases barcodes (sets <code>control_bar</code> to 0 and clears cap link)

@@ -37,6 +37,12 @@ export async function GET(req: Request) {
     const sheet = String(url.searchParams.get("sheet") || "").trim();
     const country = String(url.searchParams.get("country") || "").trim();
 
+    // NEW: map_iso2 filter (for CapMap action button)
+    const mapIso2Raw = String(url.searchParams.get("map_iso2") || "")
+      .trim()
+      .toUpperCase();
+    const mapIso2 = /^[A-Z]{2}$/.test(mapIso2Raw) ? mapIso2Raw : "";
+
     // thresholds (same rules as existing UI)
     const beerQ = beer.length >= 3 ? beer : "";
     const sheetQ = sheet.length >= 3 ? sheet : "";
@@ -58,6 +64,17 @@ export async function GET(req: Request) {
 
     // If tags are provided => use RPC (supports OR/AND + pagination + sorting)
     if (tagIds.length > 0) {
+      // IMPORTANT: Until RPC is extended, don't allow map_iso2 + tags
+      if (mapIso2) {
+        return NextResponse.json(
+          {
+            error:
+              "map_iso2 filter is not supported together with tag filters yet. Remove tags or we will extend the RPC to support map_iso2.",
+          },
+          { status: 400 }
+        );
+      }
+
       const { data, error } = await supabaseAdmin.rpc(
         "rpc_caps_page_by_tags",
         {
@@ -79,9 +96,6 @@ export async function GET(req: Request) {
       const rows = (data ?? []) as any[];
       const total = rows.length ? Number(rows[0].total_count ?? 0) : 0;
 
-      // Keep payload identical to the existing endpoint:
-      // - remove helper field `country_name_full_sort`
-      // - remove window count `total_count`
       const cleaned = rows.map((r: any) => {
         const { country_name_full_sort, total_count, ...rest } = r;
         return rest;
@@ -99,6 +113,7 @@ export async function GET(req: Request) {
           country: countryQ,
           tag_ids: tagIds,
           tag_mode: tagMode,
+          map_iso2: mapIso2 || "",
         },
       });
     }
@@ -111,36 +126,46 @@ export async function GET(req: Request) {
     const to = from + limit - 1;
 
     let q = supabaseAdmin
-      .from("v_caps_page")
-      .select(
-        `
-        id,
-        beer_name,
-        cap_no,
-        sheet,
-        entry_date,
-        issued_year,
-        caps_country,
-        caps_sources,
-        photo_caps,
-        beer_caps_tags,
-        country_name_full_sort
-      `,
-        { count: "exact" }
-      );
+      .from("v_caps_page_map") // CHANGED: wrapper view that exposes map_iso2
+		.select(
+		  `
+		  id,
+		  beer_name,
+		  cap_no,
+		  sheet,
+		  entry_date,
+		  issued_year,
+		  caps_country,
+		  caps_sources,
+		  photo_caps,
+		  beer_caps_tags,
+		  country_name_full_sort,
+		  map_iso2
+		`,
+		  { count: "exact" }
+		);
 
     // filters (contains)
     if (beerQ) q = q.ilike("beer_name", `%${beerQ}%`);
     if (sheetQ) q = q.ilike("sheet", `%${sheetQ}%`);
     if (countryQ) q = q.ilike("country_name_full_sort", `%${countryQ}%`);
 
+    // NEW: rollup map filter (exact match)
+    if (mapIso2) q = q.eq("map_iso2", mapIso2);
+
     // sorting
-    if (sortKey === "beer_name_asc") q = q.order("beer_name", { ascending: true });
-    else if (sortKey === "beer_name_desc") q = q.order("beer_name", { ascending: false });
-    else if (sortKey === "sheet_asc") q = q.order("sheet", { ascending: true, nullsFirst: false });
-    else if (sortKey === "sheet_desc") q = q.order("sheet", { ascending: false, nullsFirst: false });
-    else if (sortKey === "country_asc") q = q.order("country_name_full_sort", { ascending: true });
-    else if (sortKey === "country_desc") q = q.order("country_name_full_sort", { ascending: false });
+    if (sortKey === "beer_name_asc")
+      q = q.order("beer_name", { ascending: true });
+    else if (sortKey === "beer_name_desc")
+      q = q.order("beer_name", { ascending: false });
+    else if (sortKey === "sheet_asc")
+      q = q.order("sheet", { ascending: true, nullsFirst: false });
+    else if (sortKey === "sheet_desc")
+      q = q.order("sheet", { ascending: false, nullsFirst: false });
+    else if (sortKey === "country_asc")
+      q = q.order("country_name_full_sort", { ascending: true });
+    else if (sortKey === "country_desc")
+      q = q.order("country_name_full_sort", { ascending: false });
     else q = q.order("id", { ascending: false });
 
     const { data, error, count } = await q.range(from, to);
@@ -149,11 +174,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // remove helper field from payload so UI stays identical
-    const cleaned = (data ?? []).map((r: any) => {
-      const { country_name_full_sort, ...rest } = r;
-      return rest;
-    });
+			const cleaned = (data ?? []).map((r: any) => {
+			  const { country_name_full_sort, map_iso2, ...rest } = r;
+
+			  return {
+				...rest,
+				caps_country: r.caps_country
+				  ? {
+					  ...r.caps_country,
+					  iso2: map_iso2 ?? null,
+					}
+				  : null,
+			  };
+			});
 
     return NextResponse.json({
       data: cleaned,
@@ -161,7 +194,7 @@ export async function GET(req: Request) {
       page,
       limit,
       sort: sortKey,
-      filters: { beer: beerQ, sheet: sheetQ, country: countryQ },
+      filters: { beer: beerQ, sheet: sheetQ, country: countryQ, map_iso2: mapIso2 || "" },
     });
   } catch (e: any) {
     return NextResponse.json(

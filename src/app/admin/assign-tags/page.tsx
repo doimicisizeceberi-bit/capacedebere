@@ -602,7 +602,7 @@ const [justAddedManual, setJustAddedManual] = useState<Set<number>>(new Set());
 
   return (
     <main className="page">
-      <h1>Assign tags</h1>
+	<h1 className="h1-display">🏷️ Assign tags</h1>
 
       <div className="assign-tags-grid">
         {/* LEFT: caps list */}

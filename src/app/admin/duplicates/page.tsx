@@ -260,7 +260,7 @@ export default function DuplicatesPage() {
 
   return (
     <main className="page">
-      <h1>Duplicates</h1>
+      <h1 className="h1-display">🧬 Duplicates</h1>
 
       <div className="pager">
         <div className="filters-bar">

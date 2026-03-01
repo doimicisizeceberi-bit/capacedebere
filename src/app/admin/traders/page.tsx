@@ -406,7 +406,7 @@ export default function TradersPage() {
 
   return (
     <main className="page">
-      <h1>Traders</h1>
+      <h1 className="h1-display">🤝 Traders</h1>
 
       {/* Create: show/hide */}
       <div className="actions" style={{ marginTop: 10 }}>

@@ -241,7 +241,7 @@ export default function PhotoAuditPage() {
 
   return (
     <>
-      <h1>Photo audit</h1>
+		<h1 className="h1-display">🖼️ Photo audit</h1>
 
       <div className="audit-summary">
         <div className="stat-card">

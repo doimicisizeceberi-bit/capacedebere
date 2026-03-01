@@ -9,36 +9,36 @@ type AdminLink = {
 };
 
 const links: AdminLink[] = [
-  { href: "/admin/add-cap", title: "Add a beer cap", desc: "Insert a new cap record.", icon: "➕", tag: "Create" },
-  { href: "/admin/upload-photo", title: "Upload photo", desc: "Upload new cap photos.", icon: "📸", tag: "Photos" },
-  { href: "/admin/manage-barcodes", title: "Manage barcodes", desc: "Generate and print A0b stricker notes to label caps.", icon: "🏷️", tag: "Print" },
+  { href: "/admin/add-cap", title: "Add a beer cap", desc: "Insert a new cap record.", icon: "➕", tag: "Admin" },
+  { href: "/admin/upload-photo", title: "Upload photo", desc: "Upload new cap photos.", icon: "📸", tag: "Admin" },
+  { href: "/admin/manage-barcodes", title: "Manage barcodes", desc: "Generate and print A0b stricker notes to label caps.", icon: "🔢", tag: "Admin" },
 
-  { href: "/admin/edit-cap", title: "Edit a beer cap", desc: "Update existing caps by scanning barcodes.", icon: "✏️", tag: "Edit" },
-  { href: "/admin/photo-audit", title: "Photo audit", desc: "Review/replace/remove missing/broken photos of existing caps.", icon: "🖼️", tag: "Audit" },
-  { href: "/admin/duplicates", title: "Duplicates", desc: "View duplicates, clipboard-copy caps ids and barcodes.", icon: "🧬", tag: "Review" },
+  { href: "/admin/edit-cap", title: "Edit a beer cap", desc: "Update existing caps by scanning barcodes.", icon: "✏️", tag: "Admin" },
+  { href: "/admin/photo-audit", title: "Photo audit", desc: "Review/replace/remove missing/broken photos of existing caps.", icon: "🖼️", tag: "Admin" },
+  { href: "/admin/duplicates", title: "Duplicates", desc: "View duplicates, clipboard-copy caps ids and barcodes.", icon: "🧬", tag: "Admin" },
 
-  { href: "/admin/quick-edit", title: "Quick edit/remove a beer cap", desc: "Edit/remove caps without photos or barcodes.", icon: "⚡", tag: "Fast" },
-  { href: "/admin/assign-tags", title: "Assign tags", desc: "Edit tags assigments. Run color scan to auto-generate color-tags.", icon: "🏷️", tag: "Tags" },
-  { href: "/admin/trades", title: "Trades", desc: "Create/manage pending trades. Cancel or complete trades.", icon: "🤝", tag: "Trades" },
+  { href: "/admin/quick-edit", title: "Quick edit/remove a beer cap", desc: "Edit/remove caps without photos or barcodes.", icon: "⚡", tag: "Admin" },
+  { href: "/admin/assign-tags", title: "Assign tags", desc: "Edit tags assigments. Run color scan to auto-generate color-tags.", icon: "🏷️", tag: "Admin" },
+  { href: "/admin/trades", title: "Trades", desc: "Create/manage pending trades. Cancel or complete trades.", icon: "🔄", tag: "Admin" },
 
-  { href: "/admin/delete-cap", title: "Delete a beer cap", desc: "Remove a cap record (advanced conditions may apply).", icon: "🗑️", tag: "Delete" },
+  { href: "/admin/delete-cap", title: "Delete a beer cap", desc: "Remove a cap record (advanced conditions may apply).", icon: "🗑️", tag: "Admin" },
   { href: "/admin/manage-tags", title: "Manage tags and types", desc: "Create/edit/delete tags and types. Assign tags to types.", icon: "🧩", tag: "Admin" },
-  { href: "/admin/trade-caps", title: "Generate Trade Offer", desc: "Generate .pdf file containg doubles to initiate tradings.", icon: "📄", tag: "Export" },
+  { href: "/admin/trade-caps", title: "Generate Trade Offer", desc: "Generate .pdf file containg doubles to initiate tradings.", icon: "🖨️", tag: "Admin" },
 
-  { href: "/admin/stats", title: "Stats - under construction", desc: "Quick collection stats.", icon: "📊", tag: "WIP" },
+  { href: "/admin/stats", title: "Stats", desc: "Quick collection stats (under construction).", icon: "📊", tag: "Admin" },
   { href: "/admin/manage-countries", title: "Manage countries", desc: "Add/edit country list. Activate/deactivate country", icon: "🌍", tag: "Admin" },
-  { href: "/admin/traders", title: "Traders", desc: "Add/edit/list cap traders.", icon: "👤", tag: "Contacts" },
+  { href: "/admin/traders", title: "Traders", desc: "Add/edit/list cap traders.", icon: "🤝", tag: "Admin" },
 
-  { href: "/admin/settings", title: "Settings and features", desc: "Configure advanced admin settings.", icon: "⚙️", tag: "System" },
-  { href: "/admin/database", title: "Manage database", desc: "Restore/back-up database (under construction).", icon: "🗄️", tag: "WIP" },
-  { href: "/admin/sources", title: "Beer-cap Sources", desc: "Add/edit/list sources.", icon: "🧾", tag: "Admin" },
+  { href: "/admin/settings", title: "Settings and features", desc: "Configure advanced admin settings.", icon: "⚙️", tag: "Admin" },
+  { href: "/admin/database", title: "Manage database", desc: "Restore/back-up database (under construction).", icon: "🗄️", tag: "Admin" },
+  { href: "/admin/sources", title: "Beer-cap Sources", desc: "Add/edit/list sources.", icon: "👤", tag: "Admin" },
 ];
 
 export default function AdminHome() {
   return (
     <>
-      <h1 className="h1-display">Admin panel</h1>
-      <p className="h1-subtitle">Tools for managing the database (no security yet).</p>
+      <h1 className="h1-display">🛠️ Admin panel</h1>
+      <p className="h1-subtitle">Tools for managing the database (no advanced security yet).</p>
 
       <div className="admin-grid" style={{ marginTop: 18 }}>
         {links.map((l) => (
