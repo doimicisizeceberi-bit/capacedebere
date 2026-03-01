@@ -552,34 +552,36 @@ export default function CapMapPage() {
 							  styleFunction={styleFunction as any}
 							  tooltipBgColor="transparent"
 							  tooltipTextColor="transparent"
-							  onClickFunction={(context) => {
-								const code = String(context?.countryCode ?? "").toUpperCase();
-								if (!/^[A-Z]{2}$/.test(code)) return;
+									onClickFunction={
+									  ((e: any, event: any) => {
+										const code = String(e?.countryCode ?? "").toUpperCase();
+										if (!/^[A-Z]{2}$/.test(code)) return;
 
-								setSelectedIso2(code);
-								loadBreakdown(code);
+										setSelectedIso2(code);
+										loadBreakdown(code);
 
-								const path = context.event?.target as SVGGraphicsElement;
-								if (!path?.getBBox) return;
+										const path = event?.target as SVGGraphicsElement;
+										if (!path?.getBBox) return;
 
-								const bbox = path.getBBox();
-								const centerX = bbox.x + bbox.width / 2;
-								const centerY = bbox.y + bbox.height / 2;
+										const bbox = path.getBBox();
+										const centerX = bbox.x + bbox.width / 2;
+										const centerY = bbox.y + bbox.height / 2;
 
-								const box = mapBoxRef.current;
-								if (!box) return;
+										const box = mapBoxRef.current;
+										if (!box) return;
 
-								const newZoom = 5;
+										const newZoom = 5;
 
-								const boxCenterX = box.clientWidth / 2;
-								const boxCenterY = box.clientHeight / 2;
+										const boxCenterX = box.clientWidth / 2;
+										const boxCenterY = box.clientHeight / 2;
 
-								const newPanX = boxCenterX - centerX * newZoom;
-								const newPanY = boxCenterY - centerY * newZoom;
+										const newPanX = boxCenterX - centerX * newZoom;
+										const newPanY = boxCenterY - centerY * newZoom;
 
-								setZoom(newZoom);
-								setPan({ x: newPanX, y: newPanY });
-							  }}
+										setZoom(newZoom);
+										setPan({ x: newPanX, y: newPanY });
+									  }) as any
+									}
 							/>
 				  </div>
 				</div>
