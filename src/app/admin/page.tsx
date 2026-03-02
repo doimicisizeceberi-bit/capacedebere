@@ -30,7 +30,7 @@ const links: AdminLink[] = [
   { href: "/admin/traders", title: "Traders", desc: "Add/edit/list cap traders.", icon: "🤝", tag: "Admin" },
 
   { href: "/admin/settings", title: "Settings and features", desc: "Configure advanced admin settings.", icon: "⚙️", tag: "Admin" },
-  { href: "/admin/database", title: "Manage database", desc: "Restore/back-up database (under construction).", icon: "🗄️", tag: "Admin" },
+  { href: "/admin/database", title: "Manage database", desc: "Restore/back-up database", icon: "🗄️", tag: "Admin" },
   { href: "/admin/sources", title: "Beer-cap Sources", desc: "Add/edit/list sources.", icon: "👤", tag: "Admin" },
 ];
 
