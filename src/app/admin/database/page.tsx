@@ -5,58 +5,56 @@ import { useState } from "react";
 export default function AdminDatabasePage() {
   const [adminSecret, setAdminSecret] = useState("");
   const [dbFile, setDbFile] = useState<File | null>(null);
-  const [zipFile, setZipFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-				async function exportDB() {
-				  setBusy(true);
-				  setMsg("");
+  async function exportDB() {
+    setBusy(true);
+    setMsg("");
 
-				  try {
-					const res = await fetch("/api/admin/db/export", {
-					  method: "POST",
-					  headers: { "Content-Type": "application/json" },
-					  body: JSON.stringify({ adminSecret }),
-					});
+    try {
+      const res = await fetch("/api/admin/db/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminSecret }),
+      });
 
-					if (!res.ok) {
-					  const j = await res.json();
-					  setMsg(j?.error || "Export failed.");
-					  return;
-					}
+      if (!res.ok) {
+        const j = await res.json();
+        setMsg(j?.error || "Export failed.");
+        return;
+      }
 
-					const blob = await res.blob();
+      const blob = await res.blob();
 
-					// 🔥 Extract filename from response header
-					const disposition = res.headers.get("Content-Disposition");
-					let filename = "db_caps_backup.json";
+      const disposition = res.headers.get("Content-Disposition");
+      let filename = "db_caps_backup.json";
 
-					if (disposition) {
-					  const match = disposition.match(/filename="(.+)"/);
-					  if (match?.[1]) {
-						filename = match[1];
-					  }
-					}
+      if (disposition) {
+        const match = disposition.match(/filename="(.+)"/);
+        if (match?.[1]) {
+          filename = match[1];
+        }
+      }
 
-					const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-					const a = document.createElement("a");
-					a.href = url;
-					a.download = filename; // ← use server filename
-					document.body.appendChild(a);
-					a.click();
-					a.remove();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
 
-					window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(url);
 
-					setMsg("Database exported successfully.");
-				  } catch (e: any) {
-					setMsg(e?.message || "Export error.");
-				  } finally {
-					setBusy(false);
-				  }
-				}
+      setMsg("Database exported successfully.");
+    } catch (e: any) {
+      setMsg(e?.message || "Export error.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function restoreDB() {
     if (!dbFile) {
@@ -102,90 +100,12 @@ export default function AdminDatabasePage() {
     }
   }
 
-  async function exportStorage() {
-    setBusy(true);
-    setMsg("");
-
-    try {
-      const res = await fetch("/api/admin/storage/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminSecret }),
-      });
-
-      if (!res.ok) {
-        const j = await res.json();
-        setMsg(j?.error || "Export failed.");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "bucket_photo_caps.zip";
-      a.click();
-
-      window.URL.revokeObjectURL(url);
-
-      setMsg("Photos exported successfully.");
-    } catch (e: any) {
-      setMsg(e?.message || "Export error.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function restoreStorage() {
-    if (!zipFile) {
-      setMsg("Select a ZIP file.");
-      return;
-    }
-
-    const confirm = window.prompt(
-      "Type RESTORE PHOTOS to confirm hard reset:"
-    );
-
-    if (confirm !== "RESTORE PHOTOS") {
-      setMsg("Restore cancelled.");
-      return;
-    }
-
-    setBusy(true);
-    setMsg("");
-
-    try {
-      const fd = new FormData();
-      fd.append("adminSecret", adminSecret);
-      fd.append("file", zipFile);
-
-      const res = await fetch("/api/admin/storage/restore", {
-        method: "POST",
-        body: fd,
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        setMsg(json?.error || "Restore failed.");
-        return;
-      }
-
-      setMsg(`Photos restored: ${json.uploaded_files}`);
-    } catch (e: any) {
-      setMsg(e?.message || "Restore error.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div style={{ maxWidth: 700, margin: "40px auto" }}>
-      <h1>🗄 Admin Backup & Restore</h1>
+      <h1>🗄 Admin Database Backup & Restore</h1>
 
       <div style={{ marginBottom: 20 }}>
-        <label>Admin Password</label>
+        <label>Export-db Password</label>
         <input
           type="password"
           value={adminSecret}
@@ -194,11 +114,23 @@ export default function AdminDatabasePage() {
         />
       </div>
 
-      <hr />
+      <div
+        style={{
+          background: "#fff3cd",
+          padding: 12,
+          borderRadius: 6,
+          marginBottom: 20,
+          fontSize: 14,
+        }}
+      >
+        ⚠ This backup includes <b>database data only</b>.  
+        Storage bucket files (photos) must be backed up separately
+        using Supabase Dashboard or CLI.
+      </div>
 
       <h2>Database</h2>
 
-      <button onClick={exportDB} disabled={busy}>
+      <button onClick={exportDB} disabled={busy || !adminSecret}>
         Export Database
       </button>
 
@@ -208,32 +140,13 @@ export default function AdminDatabasePage() {
           accept="application/json"
           onChange={(e) => setDbFile(e.target.files?.[0] ?? null)}
         />
-        <button onClick={restoreDB} disabled={busy}>
+        <button onClick={restoreDB} disabled={busy || !adminSecret}>
           Restore Database
         </button>
       </div>
 
-      <hr style={{ margin: "30px 0" }} />
-
-      <h2>Photos Bucket</h2>
-
-      <button onClick={exportStorage} disabled={busy}>
-        Export Photos
-      </button>
-
-      <div style={{ marginTop: 10 }}>
-        <input
-          type="file"
-          accept=".zip"
-          onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
-        />
-        <button onClick={restoreStorage} disabled={busy}>
-          Restore Photos
-        </button>
-      </div>
-
       {msg && (
-        <div style={{ marginTop: 20, color: "crimson" }}>
+        <div style={{ marginTop: 20, color: msg.includes("success") ? "green" : "crimson" }}>
           {msg}
         </div>
       )}
