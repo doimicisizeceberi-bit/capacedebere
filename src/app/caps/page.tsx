@@ -89,8 +89,9 @@ export default function CapsPage() {
 
   // NEW: map filter (ISO2 rollup)
 		const searchParams = useSearchParams();
+
 		const [mapIso2, setMapIso2] = useState<string>(
-		  searchParams.get("map_iso2") ?? ""
+		  searchParams?.get("map_iso2") ?? ""
 		);
 
   const [page, setPage] = useState(1);
