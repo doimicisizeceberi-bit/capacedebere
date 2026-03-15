@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import React from "react";
-
+import { useSearchParams } from "next/navigation";
 
 type CapRow = {
   id: number;
@@ -88,7 +88,10 @@ export default function CapsPage() {
   const [sheetQ, setSheetQ] = useState("");
 
   // NEW: map filter (ISO2 rollup)
-  const [mapIso2, setMapIso2] = useState<string>("");
+		const searchParams = useSearchParams();
+		const [mapIso2, setMapIso2] = useState<string>(
+		  searchParams.get("map_iso2") ?? ""
+		);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<10 | 50 | 100>(10);
