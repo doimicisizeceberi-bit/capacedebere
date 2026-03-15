@@ -455,7 +455,8 @@ export default function CapsPage() {
                         </div>
                         <div>
                           <span className="label">Source:</span>{" "}
-                          {cap.caps_sources?.source_name ?? "-"}
+                          {//cap.caps_sources?.source_name ?? "-"
+						  }
                         </div>
                       </div>
 
