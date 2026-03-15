@@ -31,17 +31,20 @@ const TRADE_TYPES = [
   "scan_ro",
 ] as const;
 
-const TOP_COUNTRY_LIMIT = 5;
+const TOP_COUNTRY_LIMIT = 5; // change to 20 later
 
 export default function AddCapPage() {
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [sources, setSources] = useState<SourceRow[]>([]);
 
+  // keep feature, but OFF by default
   const [topOnly, setTopOnly] = useState(false);
 
+  // selected country via TypeaheadSelect
   const [country, setCountry] = useState<TypeaheadOption | null>(null);
   const countryId = country?.id ?? null;
 
+  // selected source via TypeaheadSelect (REQUIRED)
   const [sourceOpt, setSourceOpt] = useState<TypeaheadOption | null>(null);
   const sourceId = sourceOpt?.id ?? null;
 
@@ -54,9 +57,8 @@ export default function AddCapPage() {
   const [tradeType, setTradeType] =
     useState<(typeof TRADE_TYPES)[number]>("scan_trade");
   const [issuedYear, setIssuedYear] = useState<string>("");
-
-  const [entryDate, setEntryDate] = useState<string>("");
-
+	const [entryDate, setEntryDate] = useState<string>("");
+	
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string>("");
 
@@ -67,12 +69,13 @@ export default function AddCapPage() {
 
   const debounceRef = useRef<number | null>(null);
 
+  // Load countries + counts (from your route)
   useEffect(() => {
     const load = async () => {
       setMsg("");
       try {
         const res = await fetch("/api/countries-caps", { cache: "no-store" });
-        const text = await res.text();
+        const text = await res.text(); // read raw
 
         if (!res.ok) {
           console.error("countries-caps failed:", res.status, res.statusText, text);
@@ -91,6 +94,7 @@ export default function AddCapPage() {
     load();
   }, []);
 
+  // Load sources (anon read; meta shows ABB — Full + Trader)
   useEffect(() => {
     const loadSources = async () => {
       try {
@@ -130,6 +134,7 @@ export default function AddCapPage() {
     return countries.filter((c) => (c.caps_count ?? 0) > 0).length;
   }, [countries]);
 
+  // countries already come ordered by caps_count desc from the API route
   const countriesForPicker = useMemo(() => {
     if (!topOnly) return countries;
     return [...countries].slice(0, TOP_COUNTRY_LIMIT);
@@ -156,6 +161,7 @@ export default function AddCapPage() {
     });
   }, [sources]);
 
+  // Fetch suggestions (debounced) when typing beer name AND country chosen
   useEffect(() => {
     setMsg("");
 
@@ -214,6 +220,7 @@ export default function AddCapPage() {
 
     if (error) {
       console.error(error);
+      // If we can’t verify, safest is to block insert
       return { exists: true, err: "Could not validate cap_no uniqueness." };
     }
 
@@ -241,6 +248,21 @@ export default function AddCapPage() {
     setCapNo(maxNo + 1);
   };
 
+  const selectSuggestion = async (name: string) => {
+    setBeerName(name);
+    setShowSug(false);
+    if (countryId) await computeNextCapNo(countryId, name);
+  };
+
+  const onBeerNameBlur = async () => {
+    window.setTimeout(() => setShowSug(false), 150);
+
+    if (countryId) {
+      const clean = beerName.trim();
+      if (clean) await computeNextCapNo(countryId, clean);
+    }
+  };
+
   const onSubmit = async () => {
     setMsg("");
 
@@ -250,8 +272,32 @@ export default function AddCapPage() {
     const cleanBeer = beerName.trim();
     if (!cleanBeer) return setMsg("Beer name is required.");
 
+    if (!Number.isInteger(capNo) || capNo < 1)
+      return setMsg("cap_no must be a positive integer.");
+
+    // prevent duplicate cap_no for same country + beer_name
+    const check = await capNoExists(countryId, cleanBeer, capNo);
+    if (check.exists) {
+      setMsg(
+        check.err ||
+          `Cap no ${capNo} already exists for "${cleanBeer}" in this country.`
+      );
+      return;
+    }
+
+    const yearVal =
+      issuedYear.trim() === "" ? null : Number.parseInt(issuedYear.trim(), 10);
+
+    if (
+      yearVal !== null &&
+      (!Number.isFinite(yearVal) || issuedYear.trim().length !== 4)
+    ) {
+      return setMsg("Issued year must be 4 digits (or empty).");
+    }
+
     setBusy(true);
     try {
+      // ✅ server-only write
       const res = await fetch("/api/admin/add-cap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -261,9 +307,9 @@ export default function AddCapPage() {
           cap_country: countryId,
           sheet: sheet.trim() === "" ? null : sheet.trim(),
           trade_type: tradeType,
-          issued_year: issuedYear || null,
+          issued_year: yearVal,
           source: sourceId,
-          entry_date: entryDate || null,
+		  entry_date: entryDate.trim() === "" ? null : entryDate.trim(),
         }),
       });
 
@@ -275,15 +321,19 @@ export default function AddCapPage() {
       }
 
       setNewCapId(json.id);
+
+      setMsg("");
       setSuccessOpen(true);
 
       setBeerName("");
+      setSuggestions([]);
+      setShowSug(false);
       setCapNo(1);
       setSheet("");
       setIssuedYear("");
+	  setEntryDate("");
       setTradeType("scan_trade");
-      setSourceOpt(null);
-      setEntryDate("");
+      setSourceOpt(null); // no default
     } finally {
       setBusy(false);
     }
@@ -292,77 +342,142 @@ export default function AddCapPage() {
   return (
     <>
       <h1 className="h1-display">➕ Add beer cap</h1>
+      <p className="h1-subtitle">
+        Pick country → pick source → type beer name (with suggestions) → cap no auto-increments.
+      </p>
 
       <div className="form form-narrow">
-        <div className="form-grid-2">
+        {/* Top countries toggle */}
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={topOnly}
+            onChange={(e) => setTopOnly(e.target.checked)}
+          />
+          Show only top {TOP_COUNTRY_LIMIT} countries (
+          {Math.min(TOP_COUNTRY_LIMIT, countriesWithCapsCount)} of{" "}
+          {countriesWithCapsCount})
+        </label>
 
+        <div className="form-grid-2">
+          {/* LEFT column */}
           <div className="form-panel">
             <div className="form-panel-title">Lookup</div>
 
             <div className="form-stack">
-
+              {/* Country (TypeaheadSelect) */}
               <div className="field">
                 <label>Country</label>
+
                 <TypeaheadSelect
                   options={countryOptions}
                   value={country}
-                  onChange={(opt) => setCountry(opt)}
+                  onChange={(opt) => {
+                    setCountry(opt);
+
+                    // reset dependent fields (same behavior as before)
+                    setBeerName("");
+                    setSuggestions([]);
+                    setShowSug(false);
+                    setCapNo(1);
+                    setMsg("");
+                  }}
                   placeholder="Type 2+ chars…"
                   minChars={2}
                   maxResults={12}
-                  inputClassName="select"
+                  inputClassName="select" // reuse your existing select styling
                 />
               </div>
 
+              {/* Source (TypeaheadSelect) */}
               <div className="field">
-                <label>Source</label>
+				<label>
+				  Source <span className="label-meta">(required)</span>
+				</label>
+
                 <TypeaheadSelect
                   options={sourceOptions}
                   value={sourceOpt}
-                  onChange={(opt) => setSourceOpt(opt)}
+                  onChange={(opt) => {
+                    setSourceOpt(opt);
+                    setMsg("");
+                  }}
                   placeholder="Type 2+ chars…"
                   minChars={2}
                   maxResults={12}
                   inputClassName="select"
+                  allowCreate={false}
                 />
               </div>
 
-              <div className="field">
+              {/* Beer name + suggestions */}
+              <div className="field sug-wrap">
                 <label>Beer name</label>
                 <input
                   className="input"
                   value={beerName}
+                  disabled={!countryId}
                   onChange={(e) => setBeerName(e.target.value)}
+                  onFocus={() => {
+                    if (suggestions.length) setShowSug(true);
+                  }}
+                  onBlur={onBeerNameBlur}
+                  placeholder={countryId ? "Type at least 2 letters…" : "Select country first"}
                 />
-              </div>
 
+                {showSug && suggestions.length > 0 && (
+                  <div className="sug-box">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className="sug-item"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => selectSuggestion(s)}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* RIGHT column */}
           <div className="form-panel">
             <div className="form-panel-title">Details</div>
 
             <div className="form-stack">
-
+              {/* cap_no */}
               <div className="field">
-                <label>Cap no</label>
+				<label>
+				  Cap no <span className="label-meta">(auto)</span>
+				</label>
                 <input
                   className="input"
                   type="number"
+                  min={1}
                   value={capNo}
                   onChange={(e) => setCapNo(Number(e.target.value))}
                 />
+                <div className="help">
+                  For: {country?.label ?? "—"} / {beerName.trim() || "—"}
+                </div>
               </div>
 
+              {/* Sheet */}
               <div className="field">
                 <label>Sheet</label>
                 <input
                   className="input"
                   value={sheet}
                   onChange={(e) => setSheet(e.target.value)}
+                  placeholder="e.g. GER-13"
                 />
               </div>
 
+              {/* Trade type */}
               <div className="field">
                 <label>Trade type</label>
                 <select
@@ -378,43 +493,91 @@ export default function AddCapPage() {
                 </select>
               </div>
 
+              {/* Year */}
               <div className="field">
-                <label>Issued year</label>
+				<label>
+				  Issued year <span className="label-meta">(optional)</span>
+				</label>
                 <input
                   className="input"
                   value={issuedYear}
                   onChange={(e) => setIssuedYear(e.target.value)}
-                  placeholder="YYYY"
+                  placeholder="e.g. 2021"
+                  inputMode="numeric"
                 />
               </div>
+			  
+					{/* Entry date */}
+					<div className="field">
+					  <label>
+						Entry date <span className="label-meta">(optional)</span>
+					  </label>
 
-              <div className="field">
-                <label>Entry date</label>
-                <input
-                  className="input"
-                  value={entryDate}
-                  onChange={(e) => setEntryDate(e.target.value)}
-                  placeholder="YYYY-MM-DD"
-                />
-              </div>
+					  <input
+						className="input"
+						value={entryDate}
+						onChange={(e) => setEntryDate(e.target.value)}
+						placeholder="YYYY-MM-DD"
+					  />
 
+					  <div className="help">Leave empty to use today's date</div>
+					</div>			  
+			  
+			  
             </div>
           </div>
-
         </div>
 
+        {/* Submit */}
         <div className="actions" style={{ marginTop: 14 }}>
           <button type="button" className="button" onClick={onSubmit} disabled={busy}>
             {busy ? "Saving..." : "Save cap"}
           </button>
 
           {msg && (
-            <span style={{ color: "crimson" }}>
+            <span style={{ color: msg.startsWith("Saved!") ? "green" : "crimson" }}>
               {msg}
             </span>
           )}
         </div>
       </div>
+
+      {successOpen && (
+        <div className="modal-overlay" onClick={() => setSuccessOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ marginTop: 0 }}>✅ Success</h2>
+            <p>Beer cap successfully added to collection.</p>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
+              <button className="button" type="button" onClick={() => setSuccessOpen(false)}>
+                OK
+              </button>
+
+              <button
+                className="button"
+                type="button"
+                onClick={() => {
+                  setSuccessOpen(false);
+                  router.push("/caps");
+                }}
+              >
+                View caps
+              </button>
+
+              <button
+                className="button"
+                type="button"
+                onClick={() => {
+                  setSuccessOpen(false);
+                  router.push(`/admin/upload-photo?id=${newCapId}`);
+                }}
+              >
+                Add photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
