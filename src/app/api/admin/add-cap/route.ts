@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       trade_type,
       issued_year,
       source, // REQUIRED
+      entry_date, // NEW
     } = body ?? {};
 
     // ---------- Basic validation ----------
@@ -65,6 +66,24 @@ export async function POST(req: Request) {
       );
     }
 
+    // ---------- Entry date ----------
+    let entryDateVal: string;
+
+    if (!entry_date || String(entry_date).trim() === "") {
+      entryDateVal = new Date().toISOString().slice(0, 10); // today
+    } else {
+      const d = new Date(entry_date);
+
+      if (isNaN(d.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid entry date." },
+          { status: 400 }
+        );
+      }
+
+      entryDateVal = d.toISOString().slice(0, 10);
+    }
+
     // ---------- Insert ----------
     const { data, error } = await supabaseAdmin
       .from("beer_caps")
@@ -76,6 +95,7 @@ export async function POST(req: Request) {
         trade_type,
         issued_year: yearVal,
         source, // mandatory FK
+        entry_date: entryDateVal, // NEW
       })
       .select("id")
       .single();
