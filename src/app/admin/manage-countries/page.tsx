@@ -6,7 +6,16 @@ type CountryRow = {
   id: number;
   country_name_full: string;
   country_name_abb: string;
+  iso2: string;
+  iso3: string;
+  entity_type: string;
+  parent_country_id: number | null;
   active: boolean;
+  parent?: {
+    id: number;
+    country_name_full: string;
+    iso2: string;
+  } | null;
 };
 
 type ApiResp = {
@@ -239,6 +248,29 @@ export default function ManageCountriesPage() {
     }
   }
 
+			function getEntityIcon(entity: string) {
+			  switch (entity) {
+				case "country":
+				  return { icon: "🌍", label: "Independent country" };
+				case "territory":
+				  return { icon: "🏝️", label: "Territory" };
+				case "subnational":
+				  return { icon: "🏳️", label: "Subnational entity" };
+				case "disputed":
+				  return { icon: "⚠️", label: "Disputed" };
+				case "claim":
+				  return { icon: "📍", label: "Claim" };
+				default:
+				  return { icon: "❓", label: "Unknown" };
+			  }
+			}
+
+			function iso2safe(code?: string | null) {
+			  if (!code) return "xx";
+			  return code.toLowerCase();
+			}
+
+
   return (
     <div>
       <h1 className="h1-display">🌍 Manage countries</h1>
@@ -367,146 +399,229 @@ export default function ManageCountriesPage() {
       </div>
 
       <table className="table" style={{ marginTop: 12 }}>
-        <thead>
-          <tr>
-            <th style={{ width: 90 }}>
-              <button
-                className="button"
-                type="button"
-                onClick={() => setSort(sort === "id_asc" ? "id_desc" : "id_asc")}
-                style={{ padding: "4px 8px" }}
-              >
-                ID {sort === "id_asc" ? "↑" : sort === "id_desc" ? "↓" : ""}
-              </button>
-            </th>
+			<thead>
+			  <tr>
+				{/* ID (unchanged) */}
+				<th style={{ width: 90 }}>
+				  <button
+					className="button"
+					type="button"
+					onClick={() => setSort(sort === "id_asc" ? "id_desc" : "id_asc")}
+					style={{ padding: "4px 8px" }}
+				  >
+					ID {sort === "id_asc" ? "↑" : sort === "id_desc" ? "↓" : ""}
+				  </button>
+				</th>
 
-            <th>
-              <button
-                className="button"
-                type="button"
-                onClick={() => setSort(sort === "country_asc" ? "country_desc" : "country_asc")}
-                style={{ padding: "4px 8px" }}
-              >
-                Country {sort === "country_asc" ? "↑" : sort === "country_desc" ? "↓" : ""}
-              </button>
-            </th>
+				{/* COUNTRY (unchanged sort) */}
+				<th>
+				  <button
+					className="button"
+					type="button"
+					onClick={() => setSort(sort === "country_asc" ? "country_desc" : "country_asc")}
+					style={{ padding: "4px 8px" }}
+				  >
+					Country {sort === "country_asc" ? "↑" : sort === "country_desc" ? "↓" : ""}
+				  </button>
+				</th>
 
-            <th style={{ width: 140 }}>
-              <button
-                className="button"
-                type="button"
-                onClick={() => setSort(sort === "abb_asc" ? "abb_desc" : "abb_asc")}
-                style={{ padding: "4px 8px" }}
-              >
-                Abbreviated {sort === "abb_asc" ? "↑" : sort === "abb_desc" ? "↓" : ""}
-              </button>
-            </th>
+				{/* ABB (unchanged sort) */}
+				<th style={{ width: 140 }}>
+				  <button
+					className="button"
+					type="button"
+					onClick={() => setSort(sort === "abb_asc" ? "abb_desc" : "abb_asc")}
+					style={{ padding: "4px 8px" }}
+				  >
+					Abbreviated {sort === "abb_asc" ? "↑" : sort === "abb_desc" ? "↓" : ""}
+				  </button>
+				</th>
 
-            <th style={{ width: 140 }}>
-              <button
-                className="button"
-                type="button"
-                onClick={() => setSort(sort === "active_asc" ? "active_desc" : "active_asc")}
-                style={{ padding: "4px 8px" }}
-              >
-                Active {sort === "active_asc" ? "↑" : sort === "active_desc" ? "↓" : ""}
-              </button>
-            </th>
+				{/* NEW: ISO2 */}
+				<th style={{ width: 80, textAlign: "center" }}>ISO2</th>
 
-            <th style={{ width: 220 }}>Actions</th>
-          </tr>
-        </thead>
+				{/* NEW: ISO3 */}
+				<th style={{ width: 90, textAlign: "center" }}>ISO3</th>
+
+				{/* NEW: ENTITY */}
+				<th style={{ width: 80, textAlign: "center" }}>Entity</th>
+
+				{/* NEW: PARENT */}
+				<th style={{ width: 140 }}>Parent</th>
+
+				{/* ACTIVE (unchanged sort) */}
+				<th style={{ width: 140 }}>
+				  <button
+					className="button"
+					type="button"
+					onClick={() => setSort(sort === "active_asc" ? "active_desc" : "active_asc")}
+					style={{ padding: "4px 8px" }}
+				  >
+					Active {sort === "active_asc" ? "↑" : sort === "active_desc" ? "↓" : ""}
+				  </button>
+				</th>
+
+				{/* ACTIONS (unchanged) */}
+				<th style={{ width: 220 }}>Actions</th>
+			  </tr>
+			</thead>
 
         <tbody>
           {rows.map((r) => {
             const isEditing = editingId === r.id;
 
             return (
-              <tr key={r.id}>
-                <td>{r.id}</td>
+<tr key={r.id}>
+  {/* A. ID */}
+  <td>{r.id}</td>
 
-                <td>
-                  {isEditing ? (
-                    <input
-                      className="input"
-                      value={draftName}
-                      onChange={(e) => setDraftName(e.target.value)}
-                      style={{ width: "100%" }}
-                    />
-                  ) : (
-                    r.country_name_full
-                  )}
-                </td>
+  {/* B. COUNTRY (flag + name) */}
+  <td>
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+		<img
+		  src={`https://flagcdn.com/24x18/${iso2safe(r.iso2)}.png`}
+        alt=""
+        style={{ borderRadius: 2 }}
+		/>
+      <span>
+        {isEditing ? (
+          <input
+            className="input"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            style={{ width: "100%" }}
+          />
+        ) : (
+          r.country_name_full
+        )}
+      </span>
+    </div>
+  </td>
 
-                <td>
-                  {isEditing ? (
-                    <input
-                      className="input"
-                      value={draftAbb}
-                      onChange={(e) => setDraftAbb(e.target.value)}
-                      style={{ width: "100%", textTransform: "uppercase" }}
-                    />
-                  ) : (
-                    r.country_name_abb
-                  )}
-                </td>
+  {/* C. ABB */}
+  <td>
+    {isEditing ? (
+      <input
+        className="input"
+        value={draftAbb}
+        onChange={(e) => setDraftAbb(e.target.value)}
+        style={{ width: "100%", textTransform: "uppercase" }}
+      />
+    ) : (
+      r.country_name_abb
+    )}
+  </td>
 
-                <td>
-                  {isEditing ? (
-                    <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <input
-                        type="checkbox"
-                        checked={draftActive}
-                        onChange={(e) => setDraftActive(e.target.checked)}
-                      />
-                      <span>{draftActive ? "YES" : "NO"}</span>
-                    </label>
-                  ) : (
-                    r.active ? "YES" : "NO"
-                  )}
-                </td>
+  {/* D. ISO2 */}
+  <td style={{ textAlign: "center", fontFamily: "monospace" }}>
+    {r.iso2}
+  </td>
 
-                <td>
-                  {!isEditing ? (
-                    <button
-                      className="button"
-                      type="button"
-                      onClick={() => startEdit(r)}
-                      style={{ padding: "6px 10px" }}
-                    >
-                      Edit
-                    </button>
-                  ) : (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <button
-                        className="button"
-                        type="button"
-                        onClick={() => saveEdit(r.id)}
-                        disabled={saveBusy || !isDirty(r)}
-                        style={{ padding: "6px 10px" }}
-                      >
-                        {saveBusy ? "Saving…" : "Save"}
-                      </button>
+  {/* E. ISO3 */}
+  <td style={{ textAlign: "center", fontFamily: "monospace" }}>
+	{r.iso3}
+  </td>
 
-                      <button
-                        className="button"
-                        type="button"
-                        onClick={cancelEdit}
-                        disabled={saveBusy}
-                        style={{ padding: "6px 10px" }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
+  {/* F. ENTITY */}
+		<td style={{ textAlign: "center" }}>
+		  {(() => {
+			const e = getEntityIcon(r.entity_type);
+			return (
+			  <span title={e.label} style={{ cursor: "help" }}>
+				{e.icon}
+			  </span>
+			);
+		  })()}
+		</td>
+
+  {/* G. PARENT COUNTRY */}
+		<td>
+		  {r.parent ? (
+			<div
+			  style={{ display: "flex", alignItems: "center", gap: 6 }}
+			  title={r.parent.country_name_full}
+			>
+			  <img
+				src={`https://flagcdn.com/20x15/${iso2safe(r.parent.iso2)}.png`}
+				alt=""
+				style={{ borderRadius: 2 }}
+			  />
+			  <span style={{ fontSize: 12, opacity: 0.8 }}>
+				{r.parent.country_name_full}
+			  </span>
+			</div>
+		  ) : (
+			<span style={{ opacity: 0.4 }}>—</span>
+		  )}
+		</td>
+
+  {/* H. ACTIVE */}
+  <td style={{ textAlign: "center" }}>
+    {isEditing ? (
+      <label style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+        <input
+          type="checkbox"
+          checked={draftActive}
+          onChange={(e) => setDraftActive(e.target.checked)}
+        />
+        <span>{draftActive ? "YES" : "NO"}</span>
+      </label>
+    ) : (
+      <span
+        title={r.active ? "Active" : "Inactive"}
+        style={{
+          display: "inline-block",
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          backgroundColor: r.active ? "#16a34a" : "#dc2626",
+        }}
+      />
+    )}
+  </td>
+
+  {/* I. ACTIONS */}
+  <td>
+    {!isEditing ? (
+      <button
+        className="button"
+        type="button"
+        onClick={() => startEdit(r)}
+        style={{ padding: "6px 10px" }}
+      >
+        Edit
+      </button>
+    ) : (
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          className="button"
+          type="button"
+          onClick={() => saveEdit(r.id)}
+          disabled={saveBusy || !isDirty(r)}
+          style={{ padding: "6px 10px" }}
+        >
+          {saveBusy ? "Saving…" : "Save"}
+        </button>
+
+        <button
+          className="button"
+          type="button"
+          onClick={cancelEdit}
+          disabled={saveBusy}
+          style={{ padding: "6px 10px" }}
+        >
+          Cancel
+        </button>
+      </div>
+    )}
+  </td>
+</tr>
             );
           })}
 
           {!loading && rows.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ opacity: 0.8 }}>
+              <td colSpan={9} style={{ opacity: 0.8 }}>
                 No results.
               </td>
             </tr>

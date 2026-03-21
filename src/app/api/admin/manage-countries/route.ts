@@ -82,13 +82,23 @@ export async function GET(req: Request) {
     const country = normText(url.searchParams.get("country"));
     const abb = normAbb(url.searchParams.get("abb"));
 
-    const activeParam = normText(url.searchParams.get("active")); // "all" | "true" | "false"
+    const activeParam = normText(url.searchParams.get("active"));
     const activeFilter =
       activeParam === "true" ? true : activeParam === "false" ? false : null;
 
+    // 1. Base query
     let q = supabaseAdmin
       .from("caps_country")
-      .select("id,country_name_full,country_name_abb,active", { count: "exact" });
+      .select(`
+        id,
+        country_name_full,
+        country_name_abb,
+        iso2,
+        iso3,
+        entity_type,
+        parent_country_id,
+        active
+      `, { count: "exact" });
 
     if (country) q = q.ilike("country_name_full", `%${country}%`);
     if (abb) q = q.ilike("country_name_abb", `%${abb}%`);
@@ -115,10 +125,36 @@ export async function GET(req: Request) {
 
     const { data, error, count } = await q.range(from, to);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    let rows = data ?? [];
+
+    // 2. Fetch parent countries
+    const parentIds = Array.from(
+      new Set(rows.map((r) => r.parent_country_id).filter(Boolean))
+    );
+
+    let parentMap: Record<number, any> = {};
+
+    if (parentIds.length > 0) {
+      const { data: parents } = await supabaseAdmin
+        .from("caps_country")
+        .select("id,country_name_full,iso2")
+        .in("id", parentIds);
+
+      parentMap = Object.fromEntries((parents ?? []).map((p) => [p.id, p]));
+    }
+
+    // 3. Attach parent object
+    const rowsWithParent = rows.map((r) => ({
+      ...r,
+      parent: r.parent_country_id ? parentMap[r.parent_country_id] ?? null : null,
+    }));
 
     return NextResponse.json({
-      data: data ?? [],
+      data: rowsWithParent,
       total: count ?? 0,
       page,
       limit,
@@ -147,11 +183,20 @@ export async function POST(req: Request) {
     const abbErr = validateAbb(country_name_abb);
     if (abbErr) return NextResponse.json({ error: abbErr }, { status: 400 });
 
-    const { data, error } = await supabaseAdmin
-      .from("caps_country")
-      .insert([{ country_name_full, country_name_abb, active: true }])
-      .select("id,country_name_full,country_name_abb,active")
-      .single();
+		const { data, error } = await supabaseAdmin
+		  .from("caps_country")
+		  .insert([{ country_name_full, country_name_abb, active: true }])
+		  .select(`
+			id,
+			country_name_full,
+			country_name_abb,
+			iso2,
+			iso3,
+			entity_type,
+			parent_country_id,
+			active
+		  `)
+		  .single();
 
     if (error) {
       if (String(error.code) === "23505") {
@@ -203,12 +248,21 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "No fields to update." }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("caps_country")
-      .update(patch)
-      .eq("id", id)
-      .select("id,country_name_full,country_name_abb,active")
-      .single();
+		const { data, error } = await supabaseAdmin
+		  .from("caps_country")
+		  .update(patch)
+		  .eq("id", id)
+		  .select(`
+			id,
+			country_name_full,
+			country_name_abb,
+			iso2,
+			iso3,
+			entity_type,
+			parent_country_id,
+			active
+		  `)
+		  .single();
 
     if (error) {
       if (String(error.code) === "23505") {
