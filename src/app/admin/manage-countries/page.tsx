@@ -32,6 +32,14 @@ type SortKey =
   | "country_desc"
   | "abb_asc"
   | "abb_desc"
+  | "iso2_asc"
+  | "iso2_desc"
+  | "iso3_asc"
+  | "iso3_desc"
+  | "entity_asc"
+  | "entity_desc"
+  | "parent_asc"
+  | "parent_desc"
   | "active_asc"
   | "active_desc"
   | "id_asc"
@@ -438,16 +446,52 @@ export default function ManageCountriesPage() {
 				</th>
 
 				{/* NEW: ISO2 */}
-				<th style={{ width: 80, textAlign: "center" }}>ISO2</th>
+					<th style={{ width: 80, textAlign: "center" }}>
+					  <button
+						className="button"
+						type="button"
+						onClick={() => setSort(sort === "iso2_asc" ? "iso2_desc" : "iso2_asc")}
+						style={{ padding: "4px 8px" }}
+					  >
+						ISO2 {sort === "iso2_asc" ? "↑" : sort === "iso2_desc" ? "↓" : ""}
+					  </button>
+					</th>
 
 				{/* NEW: ISO3 */}
-				<th style={{ width: 90, textAlign: "center" }}>ISO3</th>
+						<th style={{ width: 90, textAlign: "center" }}>
+						  <button
+							className="button"
+							type="button"
+							onClick={() => setSort(sort === "iso3_asc" ? "iso3_desc" : "iso3_asc")}
+							style={{ padding: "4px 8px" }}
+						  >
+							ISO3 {sort === "iso3_asc" ? "↑" : sort === "iso3_desc" ? "↓" : ""}
+						  </button>
+						</th>
 
 				{/* NEW: ENTITY */}
-				<th style={{ width: 80, textAlign: "center" }}>Entity</th>
+						<th style={{ width: 80, textAlign: "center" }}>
+						  <button
+							className="button"
+							type="button"
+							onClick={() => setSort(sort === "entity_asc" ? "entity_desc" : "entity_asc")}
+							style={{ padding: "4px 8px" }}
+						  >
+							Entity {sort === "entity_asc" ? "↑" : sort === "entity_desc" ? "↓" : ""}
+						  </button>
+						</th>
 
 				{/* NEW: PARENT */}
-				<th style={{ width: 140 }}>Parent</th>
+						<th style={{ width: 140 }}>
+						  <button
+							className="button"
+							type="button"
+							onClick={() => setSort(sort === "parent_asc" ? "parent_desc" : "parent_asc")}
+							style={{ padding: "4px 8px" }}
+						  >
+							Parent {sort === "parent_asc" ? "↑" : sort === "parent_desc" ? "↓" : ""}
+						  </button>
+						</th>
 
 				{/* ACTIVE (unchanged sort) */}
 				<th style={{ width: 140 }}>

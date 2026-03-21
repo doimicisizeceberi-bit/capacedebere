@@ -13,14 +13,22 @@ if (!supabaseUrl || !serviceKey) {
 const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
 type SortKey =
-  | "id_asc"
-  | "id_desc"
   | "country_asc"
   | "country_desc"
   | "abb_asc"
   | "abb_desc"
+  | "iso2_asc"
+  | "iso2_desc"
+  | "iso3_asc"
+  | "iso3_desc"
+  | "entity_asc"
+  | "entity_desc"
+  | "parent_asc"
+  | "parent_desc"
   | "active_asc"
-  | "active_desc";
+  | "active_desc"
+  | "id_asc"
+  | "id_desc";
 
 const SORT_KEYS = new Set<SortKey>([
   "id_asc",
@@ -29,6 +37,14 @@ const SORT_KEYS = new Set<SortKey>([
   "country_desc",
   "abb_asc",
   "abb_desc",
+  "iso2_asc",
+  "iso2_desc",
+  "iso3_asc",
+  "iso3_desc",
+  "entity_asc",
+  "entity_desc",
+  "parent_asc",
+  "parent_desc",
   "active_asc",
   "active_desc",
 ]);
@@ -86,7 +102,7 @@ export async function GET(req: Request) {
     const activeFilter =
       activeParam === "true" ? true : activeParam === "false" ? false : null;
 
-    // 1. Base query
+    // Base query
     let q = supabaseAdmin
       .from("caps_country")
       .select(`
@@ -104,19 +120,17 @@ export async function GET(req: Request) {
     if (abb) q = q.ilike("country_name_abb", `%${abb}%`);
     if (activeFilter !== null) q = q.eq("active", activeFilter);
 
-    const [sortField, sortDir] = sort.split("_") as [
-      "id" | "country" | "abb" | "active",
-      "asc" | "desc",
-    ];
+    const [sortField, sortDir] = sort.split("_") as [string, "asc" | "desc"];
 
-    const orderCol =
-      sortField === "country"
-        ? "country_name_full"
-        : sortField === "abb"
-          ? "country_name_abb"
-          : sortField === "active"
-            ? "active"
-            : "id";
+    let orderCol = "id";
+
+    if (sortField === "country") orderCol = "country_name_full";
+    else if (sortField === "abb") orderCol = "country_name_abb";
+    else if (sortField === "iso2") orderCol = "iso2";
+    else if (sortField === "iso3") orderCol = "iso3";
+    else if (sortField === "entity") orderCol = "entity_type";
+    else if (sortField === "active") orderCol = "active";
+    else if (sortField === "id") orderCol = "id";
 
     q = q.order(orderCol, { ascending: sortDir === "asc", nullsFirst: false });
 
@@ -131,7 +145,7 @@ export async function GET(req: Request) {
 
     let rows = data ?? [];
 
-    // 2. Fetch parent countries
+    // Fetch parent countries
     const parentIds = Array.from(
       new Set(rows.map((r) => r.parent_country_id).filter(Boolean))
     );
@@ -147,11 +161,23 @@ export async function GET(req: Request) {
       parentMap = Object.fromEntries((parents ?? []).map((p) => [p.id, p]));
     }
 
-    // 3. Attach parent object
-    const rowsWithParent = rows.map((r) => ({
+    // Attach parent object
+    let rowsWithParent = rows.map((r) => ({
       ...r,
       parent: r.parent_country_id ? parentMap[r.parent_country_id] ?? null : null,
     }));
+
+    // Special sorting for parent name
+    if (sortField === "parent") {
+      rowsWithParent.sort((a: any, b: any) => {
+        const nameA = a.parent?.country_name_full || "";
+        const nameB = b.parent?.country_name_full || "";
+
+        return sortDir === "asc"
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      });
+    }
 
     return NextResponse.json({
       data: rowsWithParent,

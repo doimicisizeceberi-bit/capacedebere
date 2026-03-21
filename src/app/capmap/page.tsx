@@ -721,7 +721,7 @@ export default function CapMapPage() {
       </div>
 
       <div className="muted" style={{ marginTop: 10 }}>
-        Note: non-ISO entities are rolled up to parent ISO2 for totals.111
+        Note: non-ISO entities are rolled up to parent ISO2 for totals.
       </div>
     </main>
   );
