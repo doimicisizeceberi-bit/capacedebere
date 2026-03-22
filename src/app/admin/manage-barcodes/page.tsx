@@ -211,7 +211,7 @@ export default function ManageBarcodesPage() {
   }
 
   // Your tested PDF generator logic, unchanged parameters.
-  async function generatePdfForBarcode(barcode: string, labelTextRaw: string) {
+  async function generatePdfForBarcode(barcode: string, labelTextRaw: string, capNo: number) {
     const canvas = canvasRef.current;
     if (!canvas) throw new Error("Canvas not available");
 
@@ -219,8 +219,14 @@ export default function ManageBarcodesPage() {
     const isValid = /^[A-Za-z0-9]{3}$/.test(normalized);
     if (!isValid) throw new Error("Invalid barcode for PDF");
 
-    // Truncate to first 15 characters
-    const labelText = (labelTextRaw ?? "").slice(0, 15);
+    // Truncate to first 12 characters
+			const name12 = (labelTextRaw ?? "").slice(0, 12);
+
+			// cap_no padded with spaces to 3 characters (right aligned)
+			const capText = String(capNo).padStart(3, " ");
+
+			// final label text
+			const labelText = `${name12}${capText}`;
 
     // Label size (mm): 20mm wide x 10mm tall
     const W = 20;
@@ -296,7 +302,7 @@ export default function ManageBarcodesPage() {
     }
   }
 
-  const generateFor = async (beerCapId: number, sheet?: string) => {
+  const generateFor = async (beerCapId: number, capNo: number, sheet?: string) => {
     if (isBusy) return;
 
     setMsg("");
@@ -324,7 +330,7 @@ export default function ManageBarcodesPage() {
       const beerName = await fetchBeerName(capIdFromServer);
 
       // 3) Generate PDF using your tested parameters
-      await generatePdfForBarcode(barcode, beerName);
+      await generatePdfForBarcode(barcode, beerName, capNo);
 
       setCopySheet("");
 
@@ -623,7 +629,7 @@ export default function ManageBarcodesPage() {
                     <button
                       className="button"
                       type="button"
-                      onClick={() => generateFor(c.id)}
+                      onClick={() => generateFor(c.id, c.cap_no)}
                       disabled={isBusy}
                     >
                       {isBusy ? "Working..." : "Generate"}
