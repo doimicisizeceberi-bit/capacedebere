@@ -86,16 +86,17 @@ export async function POST(req: Request) {
     }
 
     // confirm cap exists + read its sheet (default for originals)
-    const capRes = await supabaseAdmin
-      .from("beer_caps")
-      .select("id, sheet")
-      .eq("id", beerCapId)
-      .maybeSingle();
+	const capRes = await supabaseAdmin
+	  .from("beer_caps")
+	  .select("id, sheet, cap_no")
+	  .eq("id", beerCapId)
+	  .maybeSingle();
 
     if (capRes.error) return NextResponse.json({ error: capRes.error.message }, { status: 400 });
     if (!capRes.data) return NextResponse.json({ error: "Cap not found" }, { status: 404 });
 
     const capSheet = capRes.data.sheet ?? null;
+	const capNo = capRes.data.cap_no ?? 0;
 
     // determine control_bar based on whether an original already exists
     const hasOriginal = await capHasOriginal(beerCapId);
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
         .eq("control_bar", 0); // safety check
 
       if (!upd.error) {
-        return NextResponse.json({ ok: true, barcode: free.barcode, beerCapId, control_bar, reused: true });
+        return NextResponse.json({ ok: true, barcode: free.barcode, beerCapId, cap_no: capNo, control_bar, reused: true });
       }
 
       // If update failed for concurrency reasons, fall through to new allocation
@@ -139,7 +140,7 @@ export async function POST(req: Request) {
       });
 
       if (!ins.error) {
-        return NextResponse.json({ ok: true, barcode: next, beerCapId, control_bar, reused: false });
+        return NextResponse.json({ ok: true, barcode: next, beerCapId, cap_no: capNo, control_bar, reused: false });
       }
 
       const msg = ins.error.message.toLowerCase();

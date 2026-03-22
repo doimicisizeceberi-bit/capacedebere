@@ -302,7 +302,7 @@ export default function ManageBarcodesPage() {
     }
   }
 
-  const generateFor = async (beerCapId: number, capNo: number, sheet?: string) => {
+  const generateFor = async (beerCapId: number, sheet?: string) => {
     if (isBusy) return;
 
     setMsg("");
@@ -323,14 +323,15 @@ export default function ManageBarcodesPage() {
         return;
       }
 
-      const barcode = String(json.barcode || "").trim();
-      const capIdFromServer = Number(json.beerCapId);
+		const barcode = String(json.barcode || "").trim();
+		const capIdFromServer = Number(json.beerCapId);
+		const capNoFromServer = Number(json.cap_no);
 
-      // 2) Fetch beer name from DB, truncate to 15 inside PDF generator
-      const beerName = await fetchBeerName(capIdFromServer);
+		// Fetch beer name
+		const beerName = await fetchBeerName(capIdFromServer);
 
-      // 3) Generate PDF using your tested parameters
-      await generatePdfForBarcode(barcode, beerName, capNo);
+		// Generate PDF
+		await generatePdfForBarcode(barcode, beerName, capNoFromServer);
 
       setCopySheet("");
 
@@ -629,7 +630,7 @@ export default function ManageBarcodesPage() {
                     <button
                       className="button"
                       type="button"
-                      onClick={() => generateFor(c.id, c.cap_no)}
+                      onClick={() => generateFor(c.id)}
                       disabled={isBusy}
                     >
                       {isBusy ? "Working..." : "Generate"}
