@@ -23,6 +23,13 @@ export default function NavBar() {
           Caps
         </Link>
 
+		<Link
+		  href="/caps-mobile"
+		  className={pathname === "/caps-mobile" ? "active" : ""}
+		>
+		  Caps Mobile
+		</Link>
+		
         <Link
           href="/tag-search"
           className={pathname === "/tag-search" ? "active" : ""}
