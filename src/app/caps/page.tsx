@@ -78,6 +78,8 @@ export default function CapsPage() {
     | "sheet_desc"
   >("id_desc");
 
+	const [displaySource, setDisplaySource] = useState(false);	
+
   const [beerFilter, setBeerFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [sheetFilter, setSheetFilter] = useState("");
@@ -148,6 +150,17 @@ export default function CapsPage() {
 				</span>
 			  );
 			};
+
+	useEffect(() => {
+	  fetch("/api/settings", { cache: "no-store" })
+		.then((res) => res.json())
+		.then((json) => {
+		  setDisplaySource((json.map?.display_source ?? "false") === "true");
+		})
+		.catch(() => {
+		  setDisplaySource(false);
+		});
+	}, []);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -457,11 +470,12 @@ export default function CapsPage() {
                           <span className="label">Entry date:</span>{" "}
                           {cap.entry_date ?? "-"}
                         </div>
-                        <div>
-                          <span className="label">Source:</span>{" "}
-                          {//cap.caps_sources?.source_name ?? "-"
-						  }
-                        </div>
+						<div>
+						  <span className="label">Source:</span>{" "}
+						  {displaySource
+							? cap.caps_sources?.source_name ?? "-"
+							: <span className="muted">hidden</span>}
+						</div>
                       </div>
 
                       <div>

@@ -14,6 +14,7 @@ type FormState = {
   min_saturation_pct: string;
   neutral_lightness_split: string;
   enable_auto_color_detection: boolean;
+  display_source: boolean;
 };
 
 const DEFAULTS: FormState = {
@@ -21,6 +22,7 @@ const DEFAULTS: FormState = {
   min_saturation_pct: "20",
   neutral_lightness_split: "50",
   enable_auto_color_detection: true,
+  display_source: false,
 };
 
 function clampIntString(v: string, min: number, max: number, fallback: string) {
@@ -58,12 +60,13 @@ export default function SettingsPage() {
       setRows(data);
 
       const map: Record<string, string> = json.map || {};
-      setForm({
-        color_threshold_pct: map.color_threshold_pct ?? DEFAULTS.color_threshold_pct,
-        min_saturation_pct: map.min_saturation_pct ?? DEFAULTS.min_saturation_pct,
-        neutral_lightness_split: map.neutral_lightness_split ?? DEFAULTS.neutral_lightness_split,
-        enable_auto_color_detection: (map.enable_auto_color_detection ?? "true") === "true",
-      });
+		setForm({
+		  color_threshold_pct: map.color_threshold_pct ?? DEFAULTS.color_threshold_pct,
+		  min_saturation_pct: map.min_saturation_pct ?? DEFAULTS.min_saturation_pct,
+		  neutral_lightness_split: map.neutral_lightness_split ?? DEFAULTS.neutral_lightness_split,
+		  enable_auto_color_detection: (map.enable_auto_color_detection ?? "true") === "true",
+		  display_source: (map.display_source ?? "false") === "true",
+		});
       setDirty(false);
     } catch (e: any) {
       alert(e?.message ?? "Failed to load settings");
@@ -99,6 +102,7 @@ export default function SettingsPage() {
             min_saturation_pct: normalized.min_saturation_pct,
             neutral_lightness_split: normalized.neutral_lightness_split,
             enable_auto_color_detection: normalized.enable_auto_color_detection ? "true" : "false",
+			display_source: form.display_source ? "true" : "false",
           },
         }),
       });
@@ -229,6 +233,24 @@ export default function SettingsPage() {
             </td>
             <td className="muted">If disabled, assign-tags page will not compute color suggestions.</td>
           </tr>
+		  
+			<tr>
+			  <td><b>display-source</b></td>
+			  <td>
+				<label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+				  <input
+					type="checkbox"
+					checked={form.display_source}
+					onChange={(e) => setField("display_source", e.target.checked)}
+				  />
+				  <span>{form.display_source ? "enabled" : "disabled"}</span>
+				</label>
+			  </td>
+			  <td className="muted">Show or hide cap source in the caps list details.</td>
+			</tr>
+		  
+		  
+		  
         </tbody>
       </table>
 
