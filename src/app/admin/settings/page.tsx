@@ -89,6 +89,7 @@ export default function SettingsPage() {
       min_saturation_pct: clampIntString(form.min_saturation_pct, 0, 100, DEFAULTS.min_saturation_pct),
       neutral_lightness_split: clampIntString(form.neutral_lightness_split, 0, 100, DEFAULTS.neutral_lightness_split),
       enable_auto_color_detection: !!form.enable_auto_color_detection,
+	  display_source: !!form.display_source,
     };
 
     setSaving(true);
