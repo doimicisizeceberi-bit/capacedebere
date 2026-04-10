@@ -124,6 +124,30 @@ const palette = [
   return palette[clamp(level, 0, palette.length - 1)];
 }
 
+function getFeatureCenter(feature: any): [number, number] {
+  let coords: number[][] = [];
+
+  if (feature.geometry.type === "Polygon") {
+    coords = feature.geometry.coordinates.flat();
+  } else if (feature.geometry.type === "MultiPolygon") {
+    coords = feature.geometry.coordinates.flat(2);
+  }
+
+  let x = 0;
+  let y = 0;
+  let count = 0;
+
+  for (const [lon, lat] of coords) {
+    const [px, py] = project([lon, lat]);
+    x += px;
+    y += py;
+    count++;
+  }
+
+  return count ? [x / count, y / count] : [500, 250];
+}
+
+
 /* =========================
    API shapes
 ========================= */
@@ -775,10 +799,7 @@ if (loading || !worldGeo)
 										const path = e.currentTarget as SVGGraphicsElement;
 										if (!path?.getBBox) return;
 
-										const bbox = path.getBBox();
-
-										const cx = bbox.x + bbox.width / 2;
-										const cy = bbox.y + bbox.height / 2;
+										const [cx, cy] = getFeatureCenter(f);
 
 										const zoomFactor = 4;
 
