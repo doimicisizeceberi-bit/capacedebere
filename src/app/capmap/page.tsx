@@ -1,12 +1,27 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import SVGMap from "react-svg-worldmap";
 
 
+function project([lon, lat]: [number, number]) {
+  // simple equirectangular projection
+  const x = (lon + 180) * (1000 / 360);
+  const y = (90 - lat) * (500 / 180);
+  return [x, y];
+}
 
-
-
+function geoToPath(coords: any): string {
+  return coords
+    .map((ring: any) =>
+      ring
+        .map(([lon, lat]: [number, number], i: number) => {
+          const [x, y] = project([lon, lat]);
+          return `${i === 0 ? "M" : "L"}${x},${y}`;
+        })
+        .join(" ") + " Z"
+    )
+    .join(" ");
+}
 /* =========================
    Utils / helpers
 ========================= */
@@ -142,6 +157,16 @@ export default function CapMapPage() {
   const [totalsMap, setTotalsMap] = useState<Record<string, number>>({});
   const [totalsData, setTotalsData] = useState<Array<{ iso2: string; value: number }>>([]);
 
+	const [worldGeo, setWorldGeo] = useState<any>(null);
+	
+	const [viewBox, setViewBox] = useState({
+			  x: 0,
+			  y: 0,
+			  w: 1000,
+			  h: 500,
+			});
+	
+
   const [mode, setMode] = useState<ColorMode>("buckets");
 
   const [selectedIso2, setSelectedIso2] = useState<string | null>(null);
@@ -149,10 +174,14 @@ export default function CapMapPage() {
   const [panelLoading, setPanelLoading] = useState(false);
 
   // Zoom/pan
-  const [zoom, setZoom] = useState(1.6);
-  const [pan, setPan] = useState({ x: 180, y: 20 });
+
   const dragging = useRef(false);
-  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+const dragStart = useRef<{
+  x: number;
+  y: number;
+  viewX: number;
+  viewY: number;
+} | null>(null);
 
   // Map box ref (for tooltip positioning)
   const mapBoxRef = useRef<HTMLDivElement | null>(null);
@@ -161,8 +190,12 @@ export default function CapMapPage() {
   const lastMouseInBox = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
 
-  // Tooltip (coordinates are inside the map box)
- //1 const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; text: string } | null>(null);
+			const [hovered, setHovered] = useState<{
+			  iso2: string;
+			  value: number;
+			  x: number;
+			  y: number;
+			} | null>(null);
 
   async function loadTotals() {
     setLoading(true);
@@ -191,6 +224,16 @@ export default function CapMapPage() {
   useEffect(() => {
     loadTotals();
   }, []);
+
+		useEffect(() => {
+		  fetch("/maps/world.geojson")
+			.then((res) => res.json())
+			.then((data) => setWorldGeo(data))
+			.catch(() => {
+			  alert("Failed to load world map");
+			});
+		}, []);
+
 
   async function loadBreakdown(iso2: string) {
     setPanelLoading(true);
@@ -279,48 +322,81 @@ export default function CapMapPage() {
       .slice(0, 10);
   }, [totalsMap]);
 
-			function resetView() {
-			  setZoom(1.6);
-			  setPan({ x: 180, y: 20 });
-			}
+function resetView() {
+  setViewBox({ x: 0, y: 0, w: 1000, h: 500 });
+}
 
-  function onMouseDown(e: React.MouseEvent) {
-    dragging.current = true;
-    dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
-  }
+function onMouseDown(e: React.MouseEvent) {
+  dragging.current = true;
 
-  function onMouseMove(e: React.MouseEvent) {
-    // Update last mouse position inside map box (always)
-    if (mapBoxRef.current) {
-      const r = mapBoxRef.current.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
-      lastMouseInBox.current = { x, y };
+  dragStart.current = {
+    x: e.clientX,
+    y: e.clientY,
+    viewX: viewBox.x,
+    viewY: viewBox.y,
+  };
+}
 
-      // If tooltip is visible, keep it exactly at pointer
-      //if (tooltip?.show) {
-     //   setTooltip((t) => (t ? { ...t, x, y } : t));
-     // }
-    }
+function onMouseMove(e: React.MouseEvent) {
+  const box = mapBoxRef.current;
+  if (!box) return;
 
-    // Pan drag
-    if (!dragging.current || !dragStart.current) return;
-    const dx = e.clientX - dragStart.current.x;
-    const dy = e.clientY - dragStart.current.y;
-    setPan({ x: dragStart.current.panX + dx, y: dragStart.current.panY + dy });
-  }
+  const rect = box.getBoundingClientRect();
 
-  function onMouseUp() {
-    dragging.current = false;
-    dragStart.current = null;
-  }
+  // ✅ ALWAYS track mouse (for tooltip)
+  lastMouseInBox.current = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+
+  // ✅ Only pan if dragging
+  if (!dragging.current) return;
+
+  const start = dragStart.current;
+  if (!start) return;
+
+  const dx = e.clientX - start.x;
+  const dy = e.clientY - start.y;
+
+  const scaleX = viewBox.w / box.clientWidth;
+  const scaleY = viewBox.h / box.clientHeight;
+
+  setViewBox((prev) => ({
+    ...prev,
+    x: start.viewX - dx * scaleX,
+    y: start.viewY - dy * scaleY,
+  }));
+}
+
+function zoomView(factor: number) {
+  setViewBox((prev) => {
+    const cx = prev.x + prev.w / 2;
+    const cy = prev.y + prev.h / 2;
+
+    const newW = prev.w / factor;
+    const newH = prev.h / factor;
+
+    return {
+      x: cx - newW / 2,
+      y: cy - newH / 2,
+      w: newW,
+      h: newH,
+    };
+  });
+}
+
+function onMouseUp() {
+  dragging.current = false;
+  dragStart.current = null;
+}
 
   function closePanel() {
     setSelectedIso2(null);
     setBreakdown(null);
   }
 
-  if (loading) return <p style={{ padding: "2rem" }}>Loading map...</p>;
+if (loading || !worldGeo)
+  return <p style={{ padding: "2rem" }}>Loading map...</p>;
 
   return (
     <main className="page">
@@ -390,9 +466,7 @@ export default function CapMapPage() {
 								  {/* Plus */}
 								  <button
 									type="button"
-									onClick={() =>
-									  setZoom((z) => clamp(Number((z + 0.5).toFixed(2)), 1, 16))
-									}
+										onClick={() => zoomView(1.5)}
 									style={{
 									  border: "none",
 									  background: "transparent",
@@ -407,29 +481,42 @@ export default function CapMapPage() {
 								  </button>
 
 										{/* Taller vertical slider */}
-										<input
-										  type="range"
-										  min={1}
-										  max={16}
-										  step={0.1}
-										  value={zoom}
-										  onChange={(e) => setZoom(Number(e.target.value))}
-										  style={{
-											writingMode: "vertical-lr",
-											WebkitAppearance: "slider-vertical",
-											height: 280,
-											width: 14,
-											opacity: 0.75,
-											cursor: "pointer",
-										  }}
-										/>
+<input
+  type="range"
+  min={1}
+  max={16}
+  step={0.1}
+  value={1000 / viewBox.w}
+  onChange={(e) => {
+    const z = Number(e.target.value);
 
+    setViewBox((prev) => {
+      const cx = prev.x + prev.w / 2;
+      const cy = prev.y + prev.h / 2;
+
+      const newW = 1000 / z;
+      const newH = 500 / z;
+
+      return {
+        x: cx - newW / 2,
+        y: cy - newH / 2,
+        w: newW,
+        h: newH,
+      };
+    });
+  }}
+  style={{
+    writingMode: "vertical-lr",
+    direction: "rtl",        // 👈 makes it go bottom → top
+    height: 280,
+    width: 20,
+    cursor: "pointer",
+  }}
+/>
 								  {/* Minus */}
 								  <button
 									type="button"
-									onClick={() =>
-									  setZoom((z) => clamp(Number((z - 0.5).toFixed(2)), 1, 16))
-									}
+										onClick={() => zoomView(1 / 1.5)}
 									style={{
 									  border: "none",
 									  background: "transparent",
@@ -447,10 +534,10 @@ export default function CapMapPage() {
 		
           {/* Controls */}
           <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
-            <button className="button" type="button" onClick={() => setZoom((z) => clamp(Number((z + 0.2).toFixed(2)), 1, 16))}>
+            <button className="button" type="button" onClick={() => zoomView(1.2)}>
               +
             </button>
-            <button className="button" type="button" onClick={() => setZoom((z) => clamp(Number((z - 0.2).toFixed(2)), 1, 16))}>
+            <button className="button" type="button" onClick={() => zoomView(1 / 1.2)}>
               –
             </button>
             <button className="button" type="button" onClick={resetView}>
@@ -459,7 +546,7 @@ export default function CapMapPage() {
 
             <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
               <span className="muted">Zoom:</span>
-              <b>{Math.round(zoom * 100)}%</b>
+              <b>{Math.round((1000 / viewBox.w) * 100)}%</b>
             </div>
           </div>
 
@@ -483,34 +570,68 @@ export default function CapMapPage() {
           </div>
 
           {/* Map container (tooltip lives INSIDE this box) */}
-          <div
-            ref={mapBoxRef}
-			className="capmap-box"
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={() => {
-              onMouseUp();
-            }}
-            style={{
-              overflow: "hidden",
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.08)",
-              height: 520,
-              userSelect: "none",
-              background: "linear-gradient(to bottom, #eaf4ff 0%, #dbeafe 100%)",
-              position: "relative",
-              cursor: dragging.current ? "grabbing" : "grab",
-            }}
-          >
+<div
+  ref={mapBoxRef}
+  className="capmap-box"
+  onMouseDown={onMouseDown}
+  onMouseMove={onMouseMove}
+  onMouseUp={onMouseUp}
+  onMouseLeave={() => {
+    onMouseUp();
+    setHovered(null); // 👈 important: hide tooltip when leaving map
+  }}
+  style={{
+    overflow: "hidden",
+    borderRadius: 12,
+    border: "1px solid rgba(0,0,0,0.08)",
+    aspectRatio: "2 / 1",
+    userSelect: "none",
+    background: "linear-gradient(to bottom, #eaf4ff 0%, #dbeafe 100%)",
+    position: "relative",
+    cursor: dragging.current ? "grabbing" : "grab",
+  }}
+>
+  {/* ✅ HOVER TOOLTIP */}
+  {hovered && (
+    <div
+      style={{
+        position: "absolute",
+
+        // 👇 smart positioning (prevents overflow)
+        left: Math.min(
+          hovered.x + 12,
+          (mapBoxRef.current?.clientWidth || 0) - 140
+        ),
+        top: Math.max(hovered.y - 12, 10),
+
+        background: "rgba(0,0,0,0.85)",
+        color: "#fff",
+        padding: "6px 10px",
+        borderRadius: 8,
+        fontSize: 12,
+        lineHeight: 1.2,
+        pointerEvents: "none",
+        whiteSpace: "nowrap",
+        zIndex: 50,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+      }}
+    >
+      <div style={{ fontWeight: 600 }}>
+        {iso2ToCountryName(hovered.iso2)}
+      </div>
+      <div style={{ opacity: 0.8 }}>
+        {hovered.value} caps
+      </div>
+    </div>
+  )}
+
+
             {/* Tooltip (absolute, clamped within map box, follows pointer exactly) */}
            
 
 				<div
 				  style={{
 					position: "relative",
-					transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-					transformOrigin: "center center",
 					width: "100%",
 					height: "100%",
 				  }}
@@ -545,44 +666,139 @@ export default function CapMapPage() {
 					  </defs>
 					</svg>
 					
-							<SVGMap
-							  data={totalsData.map((r) => ({ country: r.iso2, value: r.value }))}
-							  size="responsive"
-							  backgroundColor="transparent"
-							  styleFunction={styleFunction as any}
-							  tooltipBgColor="transparent"
-							  tooltipTextColor="transparent"
-									onClickFunction={
-									  ((e: any, event: any) => {
-										const code = String(e?.countryCode ?? "").toUpperCase();
-										if (!/^[A-Z]{2}$/.test(code)) return;
+							<svg
+							  viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
+								  preserveAspectRatio="xMidYMid meet"
+								  style={{ width: "100%", height: "100%" }}
+								>
+							  <defs>
+								<pattern
+								  id="zeroPattern"
+								  patternUnits="userSpaceOnUse"
+								  width="6"
+								  height="6"
+								  patternTransform="rotate(45)"
+								>
+								  <rect width="6" height="6" fill="#ffffff" />
+								  <line
+									x1="0"
+									y1="0"
+									x2="0"
+									y2="6"
+									stroke="rgba(220,38,38,0.15)"
+									strokeWidth="1"
+								  />
+								</pattern>
+							  </defs>
 
-										setSelectedIso2(code);
-										loadBreakdown(code);
+							  {worldGeo.features.map((f: any, i: number) => {
+								
+								let iso2 =
+								  f.properties?.["ISO3166-1-Alpha-2"] ||
+								  f.properties?.ISO_A2 ||
+								  "";
 
-										const path = event?.target as SVGGraphicsElement;
+								iso2 = String(iso2).toUpperCase();
+
+								// ignore invalid codes
+								if (iso2 === "-99") iso2 = "";
+								
+								const value = totalsMap[iso2] || 0;
+
+								let level = 0;
+								if (mode === "buckets") level = bucketsLevel(value);
+								else if (mode === "log") level = logLevel(value);
+								else level = quantileLevel(value, quantileThresholds);
+
+								const fill =
+								  level === 0 ? "url(#zeroPattern)" : levelToColor(level);
+
+								const geometry = f.geometry;
+								let d = "";
+
+								if (geometry.type === "Polygon") {
+								  d = geoToPath(geometry.coordinates);
+								} else if (geometry.type === "MultiPolygon") {
+								  d = geometry.coordinates.map(geoToPath).join(" ");
+								}
+
+								return (
+									<path
+									  key={i}
+									  d={d}
+									  fill={fill}
+									  stroke="rgba(0,0,0,0.2)"
+									  strokeWidth={0.3}
+									  style={{ cursor: "pointer" }}
+
+									  onMouseEnter={(e) => {
+										if (!iso2 || iso2.length !== 2) return;
+
+										// highlight border
+										e.currentTarget.style.stroke = "#2563eb";
+										e.currentTarget.style.strokeWidth = "0.8";
+
+										setHovered({
+										  iso2,
+										  value,
+										  x: lastMouseInBox.current.x,
+										  y: lastMouseInBox.current.y,
+										});
+									  }}
+
+									  onMouseMove={() => {
+										if (!iso2 || iso2.length !== 2) return;
+
+										// always update (no dependency on prev → no flicker)
+										setHovered({
+										  iso2,
+										  value,
+										  x: lastMouseInBox.current.x,
+										  y: lastMouseInBox.current.y,
+										});
+									  }}
+
+									  onMouseLeave={(e) => {
+										// restore border
+										e.currentTarget.style.stroke = "rgba(0,0,0,0.2)";
+										e.currentTarget.style.strokeWidth = "0.3";
+
+										setHovered(null);
+									  }}
+
+									  onClick={(e) => {
+										if (!iso2 || iso2.length !== 2) return;
+
+										setSelectedIso2(iso2);
+										loadBreakdown(iso2);
+
+										const path = e.currentTarget as SVGGraphicsElement;
 										if (!path?.getBBox) return;
 
 										const bbox = path.getBBox();
-										const centerX = bbox.x + bbox.width / 2;
-										const centerY = bbox.y + bbox.height / 2;
 
-										const box = mapBoxRef.current;
-										if (!box) return;
+										const cx = bbox.x + bbox.width / 2;
+										const cy = bbox.y + bbox.height / 2;
 
-										const newZoom = 5;
+										const zoomFactor = 4;
 
-										const boxCenterX = box.clientWidth / 2;
-										const boxCenterY = box.clientHeight / 2;
+										const newW = 1000 / zoomFactor;
+										const newH = 500 / zoomFactor;
 
-										const newPanX = boxCenterX - centerX * newZoom;
-										const newPanY = boxCenterY - centerY * newZoom;
+										const newX = cx - newW / 2;
+										const newY = cy - newH / 2;
 
-										setZoom(newZoom);
-										setPan({ x: newPanX, y: newPanY });
-									  }) as any
-									}
-							/>
+										setViewBox({
+										  x: newX,
+										  y: newY,
+										  w: newW,
+										  h: newH,
+										});
+									  }}
+									/>
+								);
+							  })}
+							</svg>
 				  </div>
 				</div>
 				</div>
