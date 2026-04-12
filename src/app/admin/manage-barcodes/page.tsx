@@ -76,6 +76,7 @@ export default function ManageBarcodesPage() {
 		}
 
 		setScanResult(json);
+		setScanValue(""); // ✅ clear input after successful scan
 	  } catch (e: any) {
 		setScanMsg(e?.message ?? "Network error");
 	  } finally {
