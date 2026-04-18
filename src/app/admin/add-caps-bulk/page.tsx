@@ -144,7 +144,7 @@ export default function BulkAddCapsPage() {
       if (!Number.isInteger(r.cap_no) || r.cap_no < 1) errors.push("Invalid cap_no");
       if (r.issued_year && !/^\d{4}$/.test(r.issued_year)) errors.push("Invalid year");
       if (r.entry_date && !/^\d{4}-\d{2}-\d{2}$/.test(r.entry_date)) errors.push("Invalid date");
-      return { ...r, errors, status: errors.length ? "invalid" : "pending" };
+      return { ...r, errors, status: (errors.length ? "invalid" : "pending") as Status };
     });
 
     const map = new Map<string, number[]>();
