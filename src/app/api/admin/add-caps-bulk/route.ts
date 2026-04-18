@@ -75,10 +75,10 @@ export async function POST(req: Request) {
         );
       }
 
-      const yearVal =
-        r.issued_year == null || r.issued_year === ""
-          ? null
-          : Number.parseInt(String(r.issued_year), 10);
+		const yearVal =
+		  r.issued_year == null
+			? null
+			: Number.parseInt(String(r.issued_year), 10);
 
       if (
         yearVal !== null &&
