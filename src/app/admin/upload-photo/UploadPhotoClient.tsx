@@ -117,6 +117,22 @@ export default function UploadPhotoClient() {
 
       setMsg(`Uploaded + linked: ${json.filename}`);
       setFile(null);
+	  
+	  // ✅ remove uploaded cap from UI
+		setCaps((prev) => {
+		  const updated = prev.filter((c) => c.id !== capId);
+
+		  if (updated.length > 0) {
+			const lowest = updated.reduce((min, c) => (c.id < min.id ? c : min), updated[0]);
+			setCapId(lowest.id);
+		  } else {
+			setCapId("");
+		  }
+
+		  return updated;
+		});
+			  
+	  
     } catch (err: any) {
       console.error(err);
       setMsg(err?.message || "Unexpected error during upload.");

@@ -11,51 +11,62 @@ export default function NavBar() {
 
   return (
     <header className="navbar">
-      <div
-        className="container"
-        style={{ display: "flex", alignItems: "center", gap: 16 }}
-      >
-        <Link href="/" className="brand">
-          🍺 Beer Caps DB
-        </Link>
+ <div
+  className="container"
+  style={{ display: "flex", alignItems: "center" }}
+>
+  {/* BRAND */}
+  <Link href="/" className="brand" style={{ marginRight: 16 }}>
+    🍺 Beer Caps DB
+  </Link>
 
-        <Link href="/caps" className={pathname === "/caps" ? "active" : ""}>
-          Caps
-        </Link>
+  {/* NAV LINKS */}
+  <div className="nav-links">
+    <Link href="/caps" className={pathname === "/caps" ? "active" : ""}>
+      Caps
+    </Link>
 
-		<Link
-		  href="/caps-mobile"
-		  className={pathname === "/caps-mobile" ? "active" : ""}
-		>
-		  Caps Mobile
-		</Link>
-		
-        <Link
-          href="/tag-search"
-          className={pathname === "/tag-search" ? "active" : ""}
-        >
-          Tag Search
-        </Link>
-		
-		<Link
-          href="/capmap"
-          className={pathname === "/capmap" ? "active" : ""}
-        >
-          CapMap
-        </Link>
+    <Link
+      href="/caps-mobile"
+      className={pathname === "/caps-mobile" ? "active" : ""}
+    >
+      Caps Mobile
+    </Link>
 
-        <Link
-          href="/admin"
-          className={pathname?.startsWith("/admin") ? "active" : ""}
-        >
-          Admin
-        </Link>
+    <Link
+      href="/caps-quick-view"
+      className={pathname === "/caps-quick-view" ? "active" : ""}
+    >
+      Caps Quick View
+    </Link>
 
-        {/* Push logout to the right */}
-        <div style={{ marginLeft: "auto" }}>
-          {isAdminArea && <AdminLogoutButton />}
-        </div>
-      </div>
+    <Link
+      href="/tag-search"
+      className={pathname === "/tag-search" ? "active" : ""}
+    >
+      Tag Search
+    </Link>
+
+    <Link
+      href="/capmap"
+      className={pathname === "/capmap" ? "active" : ""}
+    >
+      CapMap
+    </Link>
+
+    <Link
+      href="/admin"
+      className={pathname?.startsWith("/admin") ? "active" : ""}
+    >
+      Admin
+    </Link>
+  </div>
+
+  {/* RIGHT SIDE */}
+  <div style={{ marginLeft: "auto" }}>
+    {isAdminArea && <AdminLogoutButton />}
+  </div>
+</div>
     </header>
   );
 }

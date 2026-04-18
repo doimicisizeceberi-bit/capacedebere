@@ -1289,3 +1289,26 @@ a { color: inherit; }
   gap: 20px;
   margin-top: 20px;
 }
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a {
+  position: relative;
+  padding: 0 10px;
+}
+
+/* dot separator */
+.nav-links a:not(:last-child)::after {
+  content: "•";
+  position: absolute;
+  right: -2px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* optional: subtle hover polish */
+.nav-links a:hover::after {
+  color: #888;
+}
